@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
     <name>emizenmobileadmin</name>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <stability>stable</stability>
     <license uri="http://opensource.org/licenses/osl-3.0.php">OSL v3.0</license>
     <channel>community</channel>
@@ -27,10 +27,10 @@ Features :&#xD;
 * Product Listing View With Details&#xD;
 * Store view Selection For Dashboard,&#xD;
 * Multistore Support</notes>
-    <authors><author><name>Emizen Tech Private Limited</name><user>emizen</user><email>info@emizentech.com</email></author></authors>
-    <date>2015-09-25</date>
-    <time>11:31:54</time>
-    <contents><target name="mageetc"><dir name="modules"><file name="EmizenTech_MobileAdmin.xml" hash="3d9904aebe449343c74004cd160e0b89"/></dir></target><target name="magelocal"><dir name="EmizenTech"><dir name="MobileAdmin"><dir><dir name="Block"><file name="Index.php" hash="76f331d88fb83bbe3135c494d084e4b7"/></dir><dir name="Helper"><file name="Data.php" hash="e9fe1d9c30704ce4e47861040eb7cf89"/></dir><dir name="Model"><file name="Api.php" hash="ab4aecf0be9b1d58967757bd703820b5"/><file name="Emizenmob.php" hash="0b2018dfc93072b5712d20ed676c8a30"/><dir name="Mysql4"><dir name="Emizenmob"><file name="Collection.php" hash="6b958aa1ddc5d96955dbdf4bdd7f6976"/></dir><file name="Emizenmob.php" hash="1285e93887bc67933f0bac32bed8b762"/></dir><file name="Observer.php" hash="4758f17b582bbb6d8745cf7b97fc0cc7"/></dir><dir name="controllers"><file name="CmsController.php" hash="88290b694e7cfb080aa58e9ec2046480"/><file name="ConfigurationController.php" hash="733600ecac25a8ce7a35183212aae417"/><file name="IndexController.php" hash="b46a458e5727429e24795273cd80a3c1"/><file name="ProductsController.php" hash="de16d71111c67cbb4ab356092e83bf89"/><file name="ReportController.php" hash="f42a6f20ee66fbeb5f07c4e4170675d4"/><file name=".ConfigurationController.php.swp" hash="d82018d3f6f213b76d62489a9e149345"/></dir><dir name="etc"><file name="adminhtml.xml" hash="53c7b1eb3b23e2cf8b899309517a1c14"/><file name="api.xml" hash="c81e576c36f189af6dffefca1a746622"/><file name="config.xml" hash="db18388e630425e786e71b73a61844d4"/><file name="system.xml" hash="6f7e1b090d771a29e5d2d4777d7e4304"/></dir><dir name="sql"><dir name="mobileadmin_setup"><file name="mysql4-install-0.1.0.php" hash="3faa6e0c9146571ac842f5aeeedf961c"/></dir></dir></dir></dir></dir></target><target name="magedesign"><dir name="frontend"><dir name="base"><dir name="default"><dir name="template"><dir name="mobileadmin"><file name="index.phtml" hash="395b5512423d31a9526f94e3d7dcc13a"/></dir></dir><dir name="layout"><file name="mobileadmin.xml" hash="bf0ff6a1d30dfeb5b159c72eff4311ae"/></dir></dir></dir></dir></target><target name="mage"><dir name="lib"><dir name="EmizenMobileAdmin"><file name="PushNotificationAppCertificateKey.pem" hash="546f3a014aab15d6765f80a1133cbedd"/></dir></dir></target></contents>
+    <authors><author><name>Emizen Tech Private Limited</name><user>emizentech</user><email>info@emizentech.com</email></author></authors>
+    <date>2016-02-01</date>
+    <time>11:39:12</time>
+    <contents><target name="mageetc"><dir name="modules"><file name="EmizenTech_MobileAdmin.xml" hash=""/></dir></target><target name="magedesign"><dir name="frontend"><dir name="base"><dir name="default"><dir name="layout"><file name="mobileadmin.xml" hash=""/></dir></dir></dir></dir></target></contents>
     <compatible/>
     <dependencies><required><php><min>5.1.0</min><max>6.0.0</max></php></required></dependencies>
 </package>
