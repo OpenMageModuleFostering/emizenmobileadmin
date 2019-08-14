@@ -6,6 +6,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
     */
     public function IndexAction()
     {
+      //Mage::log('test', null, "cart_android.log");
       $modules = Mage::getConfig()->getNode('modules')->children();
       $modulesArray = (array)$modules;
       $check_arr = (array)$modulesArray['EmizenTech_MobileAdmin'];
@@ -36,6 +37,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
                 $validate_url = true;
             }
         }
+        //Mage::log('nav', null, "cart_android.log");
         if($validate_url) // if validate is true
         {
           $details     = Mage::app()->getRequest()->getParams();
@@ -51,6 +53,8 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
           {
              $details['magento_url'] =   $details['magento_url']."/";
           }
+
+          //Mage::log($details['magento_url'], null, "cart_android.log");
 
           $url         = $details['magento_url'].'api/soap/?wsdl';
 
@@ -317,12 +321,12 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
         $before_coll = count(Mage::getResourceModel('sales/order_grid_collection')->addFieldToFilter('store_id',Array('eq'=>$storeId))->setOrder('entity_id', 'desc')); //echo $before_coll; die;
 
-        if($offset != null)
+        if(isset($post_data['offset']))
         {
-          $orderCollection->addAttributeToFilter('entity_id', array('lt' => $offset)); // lt means less then
+          $orderCollection->addAttributeToFilter('entity_id', array('lt' => $post_data['offset'])); // lt means less then
         }
 
-        if($is_refresh == 1) // check last updated order when you pass parameter to $is_refresh = 1
+        if(isset($post_data['is_refresh']) == 1) // check last updated order when you pass parameter to $is_refresh = 1
         {
           $last_fetch_order  = $post_data['last_fetch_order'];
           $min_fetch_order   = $post_data['min_fetch_order'];
@@ -468,6 +472,303 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
       }
     }
 
+
+    /******************************** Start Order Processing Part *****************************************/
+
+    public function AdminInvoiceOrderAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams();
+        $sessionId = $post_data['session'];
+        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) { // check session if not, will return false
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+        $order = Mage::getModel("sales/order")->load($post_data['orderId']);
+        $result = array();
+        try
+        {
+          if($order->canInvoice())
+          {
+            $invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+            if($invoice->getTotalQty())
+            {
+              $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
+              $invoice->register();
+
+              if(!empty($post_data['send_email']))
+              {
+                $invoice->setEmailSent(true);
+              }
+
+              $invoice->getOrder()->setCustomerNoteNotify(!empty($post_data['send_email']));
+              $invoice->getOrder()->setIsInProcess(true);
+
+              $transactionSave = Mage::getModel('core/resource_transaction')
+                  ->addObject($invoice)
+                  ->addObject($invoice->getOrder());
+
+              $transactionSave->save();
+              $order->addStatusHistoryComment('Invoice was created from Mobile Admin Extension.', false);
+              $order->save();
+              $result['success'] = "Invoice Created";
+
+              $orderInvoiceResult    = Mage::helper('core')->jsonEncode($result);
+              return Mage::app()->getResponse()->setBody($orderInvoiceResult);
+            }
+            else
+            {
+              $order->addStatusHistoryComment('Cannot create an invoice without products.', false);
+              $order->save();
+              $result['error'] = "Cannot create an invoice without products!";
+
+              $orderInvoiceResult    = Mage::helper('core')->jsonEncode($result);
+              return Mage::app()->getResponse()->setBody($orderInvoiceResult);
+            }
+          }
+          else
+          {
+            $order->addStatusHistoryComment('Order cannot be invoiced.', false);
+            $order->save();
+            $result['error'] = "Cannot create an invoice!";
+
+            $orderInvoiceResult    = Mage::helper('core')->jsonEncode($result);
+            return Mage::app()->getResponse()->setBody($orderInvoiceResult);
+          }
+        }
+        catch(Mage_Core_Exception $e)
+        {
+          $result['error'] = $e->getMessage();
+
+          $orderInvoiceResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderInvoiceResult);
+        }
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+      }
+    }
+
+    public function AdminShipmentOrderAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams();
+        $sessionId = $post_data['session'];
+        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) { // check session if not, will return false
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+          $order = Mage::getModel('sales/order')->load($post_data['orderId']);
+
+          if($order->canShip())
+          {
+            $shipment = new Mage_Sales_Model_Order_Shipment_Api();
+            $shipmentId = $shipment->create($order->getIncrementId());
+
+            // mail customer
+            if($post_data['is_mail'] == 1)
+            {
+              $shipment->sendInfo($shipmentId);
+              // $shipment->setEmailSent($invoice->getEmailSent());
+            }
+
+            $result['success'] = "Shipment have been created.";
+
+            $orderShipmentResult    = Mage::helper('core')->jsonEncode($result);
+            return Mage::app()->getResponse()->setBody($orderShipmentResult);
+          }
+          else
+          {
+            $result['error'] = "Current order cannot be shipped!";
+
+            $orderShipmentResult    = Mage::helper('core')->jsonEncode($result);
+            return Mage::app()->getResponse()->setBody($orderShipmentResult);
+          }
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+      }
+    }
+
+    public function AdminCancelOrderAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams();
+        $sessionId = $post_data['session'];
+        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) { // check session if not, will return false
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+        
+        $order = Mage::getModel('sales/order')->load($post_data['orderId']);
+        if($order->canCancel())
+        {
+          $order->cancel();
+          $order->addStatusHistoryComment('Order was canceled by Mobile Admin Extension', false);
+          $order->save();
+          $result['success'] = "The order has been canceled";
+
+          $orderCancelResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderCancelResult);
+        }
+        else
+        {
+          $order->addStatusHistoryComment('Order cannot be canceled', false);
+          $order->save();
+          $result['error'] = "Current order cannot be canceled!";
+
+          $orderCancelResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderCancelResult);
+        }
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+      }
+    }
+
+    public function AdminHoldOrderAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams();
+        $sessionId = $post_data['session'];
+        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) { // check session if not, will return false
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+        //$post_data = Mage::app()->getRequest()->getParams();
+        $order = Mage::getModel('sales/order')->load($post_data['orderId']);
+        if($order->canHold())
+        {
+          $order->hold();
+          $order->addStatusHistoryComment('Order was holded by Mobile Admin Extension', false);
+          $order->save();
+          $result['success'] = "The Order Has Been holded.";
+
+          $orderHoldResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderHoldResult);
+        }
+        else
+        {
+          $order->addStatusHistoryComment('Order cannot be holded', false);
+          $order->save();
+          $result['error'] = "Current order cannot be holded!";
+
+          $orderHoldResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderHoldResult);
+        }
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+      }
+    }
+
+    public function AdminUnholdOrderAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams();
+        $sessionId = $post_data['session'];
+        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) { // check session if not, will return false
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+        // $post_data = Mage::app()->getRequest()->getParams();
+        $order = Mage::getModel('sales/order')->load($post_data['orderId']);
+        if($order->canUnhold())
+        {
+          $order->unhold();
+          $order->addStatusHistoryComment('Order was unholded by Mobile Admin Extension', false);
+          $order->save();
+          $result['success'] = "The Order Has Been unholded.";
+
+          $orderUnHoldResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderUnHoldResult);
+        }
+        else
+        {
+          $order->addStatusHistoryComment('Order cannot be unholded', false);
+          $order->save();
+          $result['error'] = "Current order cannot be unholded!";
+
+          $orderUnHoldResult    = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($orderUnHoldResult);
+        }
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+      }
+    }
+
+    public function AdminCheckOrderShipAndInvoiceAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable())
+      {
+        $post_data = Mage::app()->getRequest()->getParams(); // get data from post method
+        $sessionId = $post_data['session'];
+        if(!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // if session expired return access denied
+        {
+          echo $this->__("The Login has expired. Please try log in again.");
+          return false;
+        }
+
+          $OrderID = $post_data['orderId'];
+
+          $status = array();
+          $order = Mage::getModel('sales/order')->load($OrderID);
+
+          if($order->hasShipments() && $order->hasInvoices())
+          {
+            $status['status'] = "Both Done";
+          }
+          else if($order->hasShipments())
+          {
+            $status['status'] = "Shipment Done";
+          }
+          else if($order->hasInvoices())
+          {
+            $status['status'] = "Invoice Done";
+          }
+          else if($order->isCanceled())
+          {
+            $status['status'] = "Canceled";
+          }
+          else if(!$order->canHold())
+          {
+            $status['status'] = "On Hold";
+          }
+          else
+          {
+            $status['status'] = "Both Not Done";
+          }
+          //echo "<pre>"; print_r(get_class_methods($order));
+          $orderChkResult    = Mage::helper('core')->jsonEncode($status);
+          return Mage::app()->getResponse()->setBody($orderChkResult);
+      }
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable);
+      }
+    }
+
+
+    /******************************** End Order Processing Part *****************************************/
+
+
     /*
     * Protected function use in another function according to order id
     * It will return order detail by order id
@@ -591,9 +892,9 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
         $before_coll = count(Mage::getModel('catalog/product')->getCollection()->addStoreFilter($storeId)->setOrder('entity_id', 'desc')); //echo $before_coll; die;
 
-        if($offset != null)
+        if(isset($post_data['offset']))
         {
-          $products->addAttributeToFilter('entity_id', array('lt' => $offset)); // lt means less then
+          $products->addAttributeToFilter('entity_id', array('lt' => $post_data['offset'])); // lt means less then
         }
 
         if($is_refresh == 1) // When you pull dowm your ios app it will be refresh according to last updated time
@@ -795,9 +1096,9 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
         $before_coll = count(Mage::getModel('customer/customer')->getCollection()->addAttributeToSelect('*')->setOrder('entity_id', 'desc')); //echo $before_coll; die;
 
-        if($offset != null)
+        if(isset($post_data['offset']))
         {
-          $customers->addAttributeToFilter('entity_id', array('lt' => $offset)); // lt means less then
+          $customers->addAttributeToFilter('entity_id', array('lt' => $post_data['offset'])); // lt means less then
         }
 
         if($is_refresh == 1) // if 1 refresh last updated entry come or not
@@ -1037,6 +1338,11 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
         $storeId  = $post_data['storeid']; // get magento admin stores
         $type_id  = $post_data['days_for_dashboard']; // days for graph like 7 days , current month etc.
+
+        $orderTotalByDateTotoal = array();
+        $orderTotalByDateTax = array();
+        $orderTotalByDateShipping = array();
+        $orderTotalByDateQty = array();
 
         $now      = Mage::getModel('core/date')->timestamp(time()); // current datetime
         $end_date = date('Y-m-d 23:59:59', $now);  // change current datetime format
@@ -1288,7 +1594,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
        
         $tot = 0;
         $totTax = 0;
-        $$totShipping = 0;
+        $totShipping = 0;
         $totQty = 0;
         for($i=0; $i<=count($orderTotalByDateTotoal); $i++)
         {
@@ -1575,4 +1881,5 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
         return Mage::app()->getResponse()->setBody($isEnable);
       }
     }
+
 }
