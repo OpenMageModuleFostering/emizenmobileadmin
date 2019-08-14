@@ -308,11 +308,15 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
         }
 
         $limit      = $post_data['limit'];
+        $page       = $post_data['page_num'];
         $storeId    = $post_data['storeid'];   // Make varibles to get post data one by one
         $offset     = $post_data['offset'];
         $is_refresh = $post_data['is_refresh'];
 
         $orderCollection = Mage::getResourceModel('sales/order_grid_collection')->addFieldToFilter('store_id',Array('eq'=>$storeId))->setOrder('entity_id', 'desc'); // get order collection filter by storeId and desc order by entityId
+
+        $before_coll = count(Mage::getResourceModel('sales/order_grid_collection')->addFieldToFilter('store_id',Array('eq'=>$storeId))->setOrder('entity_id', 'desc')); //echo $before_coll; die;
+
         if($offset != null)
         {
           $orderCollection->addAttributeToFilter('entity_id', array('lt' => $offset)); // lt means less then
@@ -326,10 +330,23 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
           $orderCollection->getSelect()->where("(entity_id BETWEEN '".$min_fetch_order."'AND '".$last_fetch_order ."' AND updated_at > '".$last_updated."') OR entity_id >'".$last_fetch_order."'"); // collection filter by updated date
         }
-        $orderCollection->getSelect()->limit($limit); // define limit
+        //$orderCollection->getSelect()->limit($limit); // define limit
+        //echo "<pre>"; print_r(get_class_methods($orderCollection)); die;
 
+        if(isset($page) && $limit)
+        {
+          //echo $page."**".$limit; die;
+          $orderCollection->setPage($page,$limit);
+          $orderCollection->setPageSize($limit);
+        }
+
+        $totl_rocrd = round($before_coll/$limit); //echo $totl_rocrd; die;
+
+        $i = ($page - 1)*$limit;
+        
         foreach($orderCollection as $order){
-
+          if($i < $before_coll)
+          {
             $orderListData[] = array(
                 'entity_id'     => $order->getEntityId(),
                 'increment_id'  => $order->getIncrementId(),
@@ -340,10 +357,12 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
                 'grand_total'   => Mage::helper('mobileadmin')->getPrice($order->getGrandTotal()),
                 'toal_qty'      => Mage::getModel('sales/order')->load($order->getEntityId())->getTotalQtyOrdered()
             );
+          $i++;
+          }  
         }
 
         $updated_time       = date("Y-m-d H:i:s", Mage::getModel('core/date')->timestamp(time())); // get updated time
-        $orderListResultArr = array('orderlistdata' => $orderListData,'updated_time' =>$updated_time);
+        $orderListResultArr = array('orderlistdata' => $orderListData,'updated_time' =>$updated_time, 'total_record'=>$totl_rocrd);
         //echo "<pre>"; print_r($orderListResultArr); die;
         $orderListResult    = Mage::helper('core')->jsonEncode($orderListResultArr); // comvert data array to json
         return Mage::app()->getResponse()->setBody($orderListResult);
@@ -563,11 +582,15 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
         }
         $storeId   = $post_data['storeid'];
         $limit     = $post_data['limit'];   // Pass parameter according to post method pass
+        $page       = $post_data['page_num'];
         $offset    = $post_data['offset'];
         $new_products    = $post_data['last_fetch_product'];
         $is_refresh = $post_data['is_refresh'];
 
         $products  = Mage::getModel('catalog/product')->getCollection()->addStoreFilter($storeId)->setOrder('entity_id', 'desc');
+
+        $before_coll = count(Mage::getModel('catalog/product')->getCollection()->addStoreFilter($storeId)->setOrder('entity_id', 'desc')); //echo $before_coll; die;
+
         if($offset != null)
         {
           $products->addAttributeToFilter('entity_id', array('lt' => $offset)); // lt means less then
@@ -581,10 +604,22 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
           $products->getSelect()->where("(entity_id BETWEEN '".$min_fetch_product."'AND '".$last_fetch_product ."' AND updated_at > '".$last_updated."') OR entity_id >'".$last_fetch_product."'");
         }
 
-        $products->getSelect()->limit($limit); // define limit how many show items in your page
+        //$products->getSelect()->limit($limit); // define limit how many show items in your page
 
+        if(isset($page) && $limit)
+        {
+          //echo $page."**".$limit; die;
+          $products->setPage($page,$limit);
+          $products->setPageSize($limit);
+        }
+
+        $totl_rocrd = round($before_coll/$limit); //echo $totl_rocrd; die;
+
+        $i = ($page - 1)*$limit;
         foreach($products as $product) // make array of products detail 
         {
+          if($i < $before_coll)
+          {
             $product_data = Mage::getModel('catalog/product')->load($product->getId()); // load product according to product id
             $status       = $product_data->getStatus(); // get product status
             $qty          = Mage::getModel('cataloginventory/stock_item')->loadByProduct($product_data)->getQty(); // get Quantity
@@ -606,9 +641,11 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
                 'image'  => ($product_data->getImage())?Mage::helper('catalog/image')->init($product, 'image',$product_data->getImage())->resize(300,330)->keepAspectRatio(true)->constrainOnly(true)->__toString():'N/A',
                 'type'   => $product->getTypeId()
             );
+          $i++;  
+          }  
         }
         $updated_time       = date("Y-m-d H:i:s", Mage::getModel('core/date')->timestamp(time())); // last item updated time
-        $productResultArr  = array('productlistdata' => $product_list,'updated_time' =>$updated_time);
+        $productResultArr  = array('productlistdata' => $product_list,'updated_time' =>$updated_time,'total_record'=>$totl_rocrd);
         //echo "<pre>"; print_r($productResultArr); die;
         $productListResult = Mage::helper('core')->jsonEncode($productResultArr);
         return Mage::app()->getResponse()->setBody($productListResult);
@@ -750,10 +787,13 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
         }
 
         $limit          =   $post_data['limit']; // define limit
+        $page           =   $post_data['page_num'];
         $offset         =   $post_data['offset']; // define offset
         $new_customers  =   $post_data['last_fetch_customer']; // define last fetch customer time
         $is_refresh     =   $post_data['is_refresh']; // pass is_refresh int 1 or 0
         $customers      =   Mage::getModel('customer/customer')->getCollection()->addAttributeToSelect('*')->setOrder('entity_id', 'desc');
+
+        $before_coll = count(Mage::getModel('customer/customer')->getCollection()->addAttributeToSelect('*')->setOrder('entity_id', 'desc')); //echo $before_coll; die;
 
         if($offset != null)
         {
@@ -768,8 +808,22 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
           $customers->getSelect()->where("(e.entity_id BETWEEN '".$min_fetch_customer."'AND '".$last_fetch_customer ."' AND updated_at > '".$last_updated."') OR e.entity_id >'".$last_fetch_customer."'");
         }
 
-          $customers->getSelect()->limit($limit); // define limit
-          foreach($customers as $customer)
+          //$customers->getSelect()->limit($limit); // define limit
+
+        if(isset($page) && $limit)
+        {
+          //echo $page."**".$limit; die;
+          $customers->setPage($page,$limit);
+          $customers->setPageSize($limit);
+        }
+
+        $totl_rocrd = round($before_coll/$limit); //echo $totl_rocrd; die;
+
+        $i = ($page - 1)*$limit;
+
+        foreach($customers as $customer)
+        {
+          if($i < $before_coll)
           {
             $billing_address  = Mage::getModel('customer/address')->load($customer->getDefaultBilling()); // get billing address
             $shipping_address = Mage::getModel('customer/address')->load($customer->getDefaultShipping()); // get shipping address
@@ -783,9 +837,11 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
                 'billing_address_id'    => $billing_address->getId(),
                 'shipping_address_id'   => $shipping_address->getId()
             );
+          $i++;
           }
+        }
         $updated_time       = date("Y-m-d H:i:s", Mage::getModel('core/date')->timestamp(time())); // updated time
-        $customerListResultArr = array('customerlistdata' => $customer_list,'updated_time' =>$updated_time);
+        $customerListResultArr = array('customerlistdata' => $customer_list,'updated_time' =>$updated_time,'total_record'=>$totl_rocrd);
         $customerListResult    = Mage::helper('core')->jsonEncode($customerListResultArr);
         return Mage::app()->getResponse()->setBody($customerListResult); // return customer list in default json format
       }
@@ -1007,7 +1063,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
           $timezoneLocal = Mage::app()->getStore()->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE);
 
           list ($dateStart, $dateEnd) = Mage::getResourceModel('reports/order_collection')
-          ->getDateRange('24h', '', '', true);
+          ->getDateRange('12h', '', '', true);
 
           $dateStart->setTimezone($timezoneLocal);
           $dateEnd->setTimezone($timezoneLocal);
@@ -1045,7 +1101,8 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
           $count = 0;
           foreach($dates as $date)
           {
-            $orderCollectionByDate = Mage::getModel('sales/order')->getCollection()->addFieldToFilter('store_id',Array('eq'=>$storeId))->addFieldToFilter('status',Array('eq'=>'complete'))->setOrder('entity_id', 'desc');
+            //$orderCollectionByDate = Mage::getModel('sales/order')->getCollection()->addFieldToFilter('store_id',Array('eq'=>$storeId))->addFieldToFilter('status',Array('eq'=>'complete'))->setOrder('entity_id', 'desc');
+            $orderCollectionByDate = Mage::getModel('sales/order')->getCollection();
 
             if($type_id==24)
             {
@@ -1058,9 +1115,11 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
               $dateEnd     = date('Y-m-d 23:59:59',strtotime($date)); 
             }
             $orderByDate = $orderCollectionByDate->addAttributeToFilter('created_at', array('from'=>$dateStart, 'to'=>$dateEnd));
-            $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
-            $orderByDate->getSelect()->group(array('store_id'));
-            $orderdata= $orderByDate->getData();
+            //echo "<pre>"; print_r($orderByDate->getData()); 
+             //$orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
+            // $orderByDate->getSelect()->group(array('store_id'));
+            // $orderdata= $orderByDate->getData();
+            //echo count($orderByDate); die;
             if(count($orderByDate) == 0)
             {
               if ($type_id==24)
@@ -1078,20 +1137,86 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
             }
             else
             {
+              //echo $type_id; die;
               if($type_id==24)
               {
-                $ordersByDate[date("Y-m-d H:i",strtotime($date))][]   = $orderdata[0]['grand_total_sum'];
-                $orderTotalByDate[date("Y-m-d H:i",strtotime($date))] = array_sum($ordersByDate[date("Y-m-d H:i",strtotime($date))]);    
+                //$ordersByDate[date("Y-m-d H:i",strtotime($date))][]   = $orderdata[0]['grand_total_sum'];
+                //$orderTotalByDate[date("Y-m-d H:i",strtotime($date))] = array_sum($ordersByDate[date("Y-m-d H:i",strtotime($date))]);    
+                $orderTotalByDate[date("Y-m-d H:i",strtotime($date))] = count($orderByDate);    
+
+                $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
+                $orderByDate->getSelect()->columns('SUM(tax_amount) AS tax_total_sum');
+                $orderByDate->getSelect()->columns('SUM(shipping_amount) AS shipping_total_sum');
+                $orderByDate->getSelect()->columns('SUM(total_qty_ordered) AS qty_total_sum');
+
+                $orderByDateData = $orderByDate->getData();
+
+                $ordersByDate[$date][]   = $orderByDateData[0]['grand_total_sum'];
+                $orderTotalByDateTotoal[] =  array_sum($ordersByDate[$date]);
+
+                $ordersByDateTax[$date][]   = $orderByDateData[0]['tax_total_sum'];
+                $orderTotalByDateTax[] =  array_sum($ordersByDateTax[$date]);
+
+                $ordersByDateShipping[$date][]   = $orderByDateData[0]['shipping_total_sum'];
+                $orderTotalByDateShipping[] =  array_sum($ordersByDateShipping[$date]);
+
+                $ordersByDateQty[$date][]   = $orderByDateData[0]['qty_total_sum'];
+                $orderTotalByDateQty[] =  array_sum($ordersByDateQty[$date]);
+
               }
               else if ($type_id=='month')
               {
-                $ordersByDate[date('d',strtotime($date))][]   = $orderdata[0]['grand_total_sum'];
-                $orderTotalByDate[date('d',strtotime($date))] = array_sum($ordersByDate[date('d',strtotime($date))]);    
+                //$ordersByDate[date('d',strtotime($date))][]   = $orderdata[0]['grand_total_sum'];
+                //$orderTotalByDate[date('d',strtotime($date))] = array_sum($ordersByDate[date('d',strtotime($date))]);    
+                $orderTotalByDate[date('d',strtotime($date))] = count($orderByDate);    
+
+                $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
+                $orderByDate->getSelect()->columns('SUM(tax_amount) AS tax_total_sum');
+                $orderByDate->getSelect()->columns('SUM(shipping_amount) AS shipping_total_sum');
+                $orderByDate->getSelect()->columns('SUM(total_qty_ordered) AS qty_total_sum');
+
+                $orderByDateData = $orderByDate->getData();
+
+                $ordersByDate[$date][]   = $orderByDateData[0]['grand_total_sum'];
+                $orderTotalByDateTotoal[] =  array_sum($ordersByDate[$date]);
+
+                $ordersByDateTax[$date][]   = $orderByDateData[0]['tax_total_sum'];
+                $orderTotalByDateTax[] =  array_sum($ordersByDateTax[$date]);
+
+                $ordersByDateShipping[$date][]   = $orderByDateData[0]['shipping_total_sum'];
+                $orderTotalByDateShipping[] =  array_sum($ordersByDateShipping[$date]);
+
+                $ordersByDateQty[$date][]   = $orderByDateData[0]['qty_total_sum'];
+                $orderTotalByDateQty[] =  array_sum($ordersByDateQty[$date]);
+
               }
               else
               {
-                $ordersByDate[$date][]   = $orderdata[0]['grand_total_sum'];
-                $orderTotalByDate[$date] = array_sum($ordersByDate[$date]);    
+                //$ordersByDate[$date][]   = $orderdata[0]['grand_total_sum'];
+                //$orderTotalByDate[$date] = array_sum($ordersByDate[$date]);    
+                $orderTotalByDate[$date] = count($orderByDate);
+
+
+                $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
+                $orderByDate->getSelect()->columns('SUM(tax_amount) AS tax_total_sum');
+                $orderByDate->getSelect()->columns('SUM(shipping_amount) AS shipping_total_sum');
+                $orderByDate->getSelect()->columns('SUM(total_qty_ordered) AS qty_total_sum');
+
+                $orderByDateData = $orderByDate->getData();
+
+                $ordersByDate[$date][]   = $orderByDateData[0]['grand_total_sum'];
+                $orderTotalByDateTotoal[] =  array_sum($ordersByDate[$date]);
+
+                $ordersByDateTax[$date][]   = $orderByDateData[0]['tax_total_sum'];
+                $orderTotalByDateTax[] =  array_sum($ordersByDateTax[$date]);
+
+                $ordersByDateShipping[$date][]   = $orderByDateData[0]['shipping_total_sum'];
+                $orderTotalByDateShipping[] =  array_sum($ordersByDateShipping[$date]);
+
+                $ordersByDateQty[$date][]   = $orderByDateData[0]['qty_total_sum'];
+                $orderTotalByDateQty[] =  array_sum($ordersByDateQty[$date]);
+                
+                
               }
             }
 
@@ -1120,17 +1245,37 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
 
             foreach($dates as $date)
             {
-              $orderCollectionByDate = Mage::getModel('sales/order')->getCollection()->addFieldToFilter('store_id',Array('eq'=>$storeId))->addFieldToFilter('status',Array('eq'=>'complete'))->setOrder('entity_id', 'desc');
+
+              $orderCollectionByDate = Mage::getModel('sales/order')->getCollection()->addFieldToFilter('store_id',Array('eq'=>$storeId));
+
               $dateStart   = date('Y-m-d 00:00:00',strtotime($date));
               $dateEnd     = date('Y-m-d 23:59:59',strtotime($date)); 
               $orderByDate = $orderCollectionByDate->addAttributeToFilter('created_at', array('from'=>$dateStart, 'to'=>$dateEnd));
-              $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
-              $orderByDate->getSelect()->group(array('store_id'));
-              $orderdata= $orderByDate->getData();
-              $ordersByDate[]   = $orderdata[0]['grand_total_sum'];
+
             }
 
-            $orderTotalByDate[$month] = array_sum($ordersByDate);
+            //$orderTotalByDate[$month] = array_sum($ordersByDate);
+            $orderTotalByDate[$month] = count($orderByDate);
+
+            $orderByDate->getSelect()->columns('SUM(grand_total) AS grand_total_sum');
+            $orderByDate->getSelect()->columns('SUM(tax_amount) AS tax_total_sum');
+            $orderByDate->getSelect()->columns('SUM(shipping_amount) AS shipping_total_sum');
+            $orderByDate->getSelect()->columns('SUM(total_qty_ordered) AS qty_total_sum');
+
+            $orderByDateData = $orderByDate->getData();
+
+            $ordersByDate[$date][]   = $orderByDateData[0]['grand_total_sum'];
+            $orderTotalByDateTotoal[] =  array_sum($ordersByDate[$date]);
+
+            $ordersByDateTax[$date][]   = $orderByDateData[0]['tax_total_sum'];
+            $orderTotalByDateTax[] =  array_sum($ordersByDateTax[$date]);
+
+            $ordersByDateShipping[$date][]   = $orderByDateData[0]['shipping_total_sum'];
+            $orderTotalByDateShipping[] =  array_sum($ordersByDateShipping[$date]);
+
+            $ordersByDateQty[$date][]   = $orderByDateData[0]['qty_total_sum'];
+            $orderTotalByDateQty[] =  array_sum($ordersByDateQty[$date]);
+
           }
         }
 
@@ -1140,7 +1285,44 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
         //$averageOrder         = strip_tags(Mage::helper('core')->currency(round(Mage::getResourceModel('reports/order_collection')->addFieldToFilter('store_id', $storeId)->calculateSales()->load()->getFirstItem()->getAverage(),2)));
         //$orderTotalResultArr  = array('dashboard_result' =>array('ordertotalbydate' => $orderTotalByDate,'ordergrandtotal' => $orderGrandTotal,'totalordercount' => $total_count,'lifetimesales' => $lifeTimeSales,'averageorder' => $averageOrder));
 
-        $orderTotalResultArr  = array('dashboard_result' =>array('ordertotalbydate' => $orderTotalByDate));
+       
+        $tot = 0;
+        $totTax = 0;
+        $$totShipping = 0;
+        $totQty = 0;
+        for($i=0; $i<=count($orderTotalByDateTotoal); $i++)
+        {
+          $tot = $tot + $orderTotalByDateTotoal[$i];
+        }
+
+        for($j = 0; $j <= count($orderTotalByDateTax); $j++)
+        {
+          $totTax = $totTax + $orderTotalByDateTax[$j];
+        }
+
+        for($k = 0; $k <= count($orderTotalByDateShipping); $k++)
+        {
+          $totShipping = $totShipping + $orderTotalByDateShipping[$k];
+        }
+
+        for($l = 0; $l <= count($orderTotalByDateQty); $l++)
+        {
+          $totQty = $totQty + $orderTotalByDateQty[$l];
+        }        
+
+        //$orderTotalResultArr  = array('dashboard_result' =>array('ordertotalbydate' => $orderTotalByDate));
+        $orderTotalResultArr  = array(
+                                  'dashboard_result' => array(
+                                                            'ordertotalbydate' => $orderTotalByDate,
+                                                            'orderTotalAmount' => array(
+                                                                                    'Revenue' => Mage::helper('core')->currency($tot, true, false),
+                                                                                    'Tax' => Mage::helper('core')->currency($totTax, true, false),
+                                                                                    'Shipping' => Mage::helper('core')->currency($totShipping, true, false),
+                                                                                    'Quantity' => $totQty
+                                                                                  )
+                                                        ),
+                                );
+                                  
         //echo "<pre>"; print_r($orderTotalResultArr); die;
         $orderDashboardResult = Mage::helper('core')->jsonEncode($orderTotalResultArr);
         return Mage::app()->getResponse()->setBody($orderDashboardResult);
@@ -1232,5 +1414,165 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
       }
       $result = strtotime("{$year}-{$month}-01");
       return date('Y-m-d', $result);
+    }
+
+    /*public function reIndexAction()
+    {
+      $collection = Mage::getResourceModel('index/process_collection');
+      $re = Mage::getModel('index/process');
+      echo "<pre>"; print_r($re->getCollection()->getData()); die;
+
+
+      $data = Mage::app()->getRequest()->getParams();
+
+      $processId = $data['process'];
+      //echo $processId['process']; die;
+      $result = array();
+
+      $process = $this->_initProcess($processId);
+
+      echo $process->getIndexer()->getName();
+
+      echo "<pre>"; print_r($process->getData()); die;
+      if ($process)
+      {
+          try {
+              Varien_Profiler::start('__INDEX_PROCESS_REINDEX_ALL__');
+
+              $process->reindexEverything();
+              Varien_Profiler::stop('__INDEX_PROCESS_REINDEX_ALL__');
+              
+              $result['status'] = "index was rebuilt.".$process->getIndexer()->getName();
+          } catch (Mage_Core_Exception $e) {
+              
+              $result['error'] = $e->getMessage();
+          } catch (Exception $e) {
+
+              $result['error'] = "There was a problem with reindexing process.";
+          }
+      } else {
+
+          $result['error'] = "Cannot initialize the indexer process.";
+      }
+
+      echo "<pre>"; print_r($result);
+    }
+
+    protected function _initProcess($processId)
+    {
+        //$processId = Mage::app()->getRequest()->getParams('process');
+        if($processId)
+        {  
+          $process = Mage::getModel('index/process')->load($processId);
+          if($process->getId() && $process->getIndexer()->isVisible())
+          {
+            return $process;
+          }
+        }
+        return false;
+    }*/
+
+    /**
+     * Reindex all using command
+     */
+    public function reindexAllAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams(); // get data from post method
+        $sessionId = $post_data['session']; // session id
+        if(!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // if logged in return true otherwise access denied
+        {
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }   
+          try
+          {
+            $result = array();
+            $mage_base = Mage::getBaseDir();
+            //echo $mage_base; die;
+            system("php ". $mage_base ."/shell/indexer.php reindexall > ".$mage_base."/var/log/reindexall.log &");
+            $result['success'] = "reindexall via SHELL processing !";
+          }
+          catch(Exception $e)
+          {
+            $result['error'] = $e->getMessage();
+          }
+          $jsonData = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($jsonData);
+      }    
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable);
+      }
+    }
+
+    /**
+     * Flush cache storage
+     */
+    public function flushAllAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams(); // get data from post method
+        $sessionId = $post_data['session']; // session id
+        if(!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // if logged in return true otherwise access denied
+        {
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+          try
+          {
+            $result = array();
+            Mage::app()->getCacheInstance()->flush();
+            $result['success'] = "The cache storage has been flushed.";
+          }
+          catch (Exception $e)
+          {
+            $result['error'] = $e->getMessage();  
+          }
+          $jsonData = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($jsonData);
+      }    
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable);
+      }
+    }
+
+    /**
+     * Flush all magento cache
+     */
+    public function flushSystemAction()
+    {
+      if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      {
+        $post_data = Mage::app()->getRequest()->getParams(); // get data from post method
+        $sessionId = $post_data['session']; // session id
+        if(!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // if logged in return true otherwise access denied
+        {
+            echo $this->__("The Login has expired. Please try log in again.");
+            return false;
+        }
+          try
+          {
+            $result = array();
+            Mage::app()->cleanCache();
+            $result['success'] = "The Magento cache storage has been flushed.";
+          }
+          catch(Exception $e)
+          {
+            $result['error'] = $e->getMessage();
+          }
+          $jsonData = Mage::helper('core')->jsonEncode($result);
+          return Mage::app()->getResponse()->setBody($jsonData);
+      }    
+      else
+      {
+        $isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+        return Mage::app()->getResponse()->setBody($isEnable);
+      }
     }
 }
