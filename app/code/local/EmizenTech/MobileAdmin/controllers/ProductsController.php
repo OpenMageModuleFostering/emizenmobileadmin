@@ -72,29 +72,6 @@ class EmizenTech_MobileAdmin_ProductsController extends Mage_Core_Controller_Fro
     	}
     	$options['categoriesList'] = $this->customCategoriesAction($parentId, $catLabel, $storeId);
 
-  //   	if(isset($post_data['url']) && isset($post_data['user']) && isset($post_data['password']))
-  //   	{
-	 //    	// login api with username and password to get admin categories
-	 //    	try
-		//     {
-		//     	$url = $post_data['url'].'api/soap/?wsdl';
-		//     	$soap       = new SoapClient($url); // load shop library
-		//     	$session_id = $soap->login($post_data['user'], $post_data['password']);
-		//     }
-		//     catch(SoapFault $fault)
-		//     {
-		//     	$result['error'] = $fault->getMessage();
-		//     	$jsonData = Mage::helper('core')->jsonEncode($result); // encode array to json
-		//     	return Mage::app()->getResponse()->setBody($jsonData);
-		//     }
-
-		//     if($session_id)
-		//     {
-		//     	$result = $soap->call($session_id,'catalog_category.tree');
-		//     	$options['caegoriesList'] = $result;
-		//     }
-		// }
-
         $isEnable = Mage::helper('core')->jsonEncode($options);
         return Mage::app()->getResponse()->setBody($isEnable);
 	}
@@ -144,15 +121,17 @@ class EmizenTech_MobileAdmin_ProductsController extends Mage_Core_Controller_Fro
 
 			// Inventory
 			$product_qty = $data['qty'];
-			$product_stock_availability = $data['stock_availability'];
+			//$product_stock_availability = $data['stock_availability'];
+			$product_manage_stock = $data['manage_stock'];
+			$product_is_in_stock = $data['is_in_stock'];
 
 			// Websites
 			$product_websites = $data['websites'];
-			$product_websites_commas_value = implode(',', $product_websites);
+			//$product_websites_commas_value = implode(',', $product_websites);
 
 			// Categories
 			$product_categories = $data['categories'];
-			$product_categories_commas_value = implode(',', $product_categories);
+			//$product_categories_commas_value = implode(',', $product_categories);
 
 		}
 		else
@@ -170,26 +149,32 @@ class EmizenTech_MobileAdmin_ProductsController extends Mage_Core_Controller_Fro
 			->setTypeId($product_type)     // e.g. Mage_Catalog_Model_Product_Type::TYPE_SIMPLE
 			->setAttributeSetId($product_attribute_type) // default attribute set
 			->setSku($product_sku) // generate some random SKU 
-			//->setWebsiteIDs(array($product_websites_commas_value))
-			->setWebsiteIDs(array(1))
+			->setWebsiteIDs($product_websites)
 		;			
 
 		// make the product visible
 		$product
-			->setCategoryIds(array(12))
+			->setCategoryIds($product_categories)
 			->setStatus($product_status)
 			->setUrlKey($product_url_key)
 			->setVisibility($product_visibility) // visible in catalog and search
 			->setCountryOfManufacture($product_manufacture)
 		;
+
 		// configure stock
+		if(isset($product_manage_stock))
+		{
+			$check_manage_stock = $product_manage_stock;
+		}
+		else
+		{
+			$check_manage_stock = 0;
+		}
 		$product->setStockData(array(
 			'use_config_manage_stock' => 1, // use global config ?
-			'manage_stock'            => 0, // shoudl we manage stock or not?
-			// 'is_in_stock'             => $product_stock_availability, 
-			// 'qty'                     => $product_qty,
-			'is_in_stock'             => 1, 
-			'qty'                     => 1,
+			'manage_stock'            => $check_manage_stock, // shoudl we manage stock or not?
+			'is_in_stock'             => $product_is_in_stock, 
+			'qty'                     => $product_qty,
         ));		
 		
 		// optimize performance, tell Magento to not update indexes
@@ -276,6 +261,7 @@ class EmizenTech_MobileAdmin_ProductsController extends Mage_Core_Controller_Fro
 
 		}
 		Mage::log($data, null, "cart_android.log");
+		// die('die');
 		if ($doSave)
 			$product->save();
 
