@@ -60,4 +60,28 @@ class EmizenTech_MobileAdmin_Model_Observer
             $result = Mage::helper('mobileadmin')->pushNotification('customer');
         } 
 	}	
+
+
+    public function saveOrderAfter(Varien_Event_Observer $observer)
+    {
+        //$order = $observer->getEvent()->getOrder(); //I don't know why this returns null for you. It shouldn't
+        //or for multishipping
+        //$order = $observer->getEvent()->getOrders(); //you should get an array of orders
+        //for the quote
+        $quote = $observer->getEvent()->getOrder(); 
+        $items = $quote->getAllVisibleItems();
+        $aa = array();
+        foreach($items as $item)
+        {
+            // echo $item->getName();
+            $aa[] = $item->debug();
+            $quote->setSupplierProductName($item->getName());
+            // custom code to update order or any thing
+        }
+        $quote->save();
+        Mage::log($aa, null, "cart_android.log");
+        die;
+        
+      
+    }
 }

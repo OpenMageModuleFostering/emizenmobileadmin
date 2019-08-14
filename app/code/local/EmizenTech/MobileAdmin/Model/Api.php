@@ -74,4 +74,5 @@ class EmizenTech_MobileAdmin_Model_Api extends Mage_Api_Model_Resource_Abstract
             $result = array('success' => $successArr,'stores' => $storeArr,'is_pos' => $isPos);
             return $result;
     }
+
 }

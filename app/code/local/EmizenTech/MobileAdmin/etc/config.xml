@@ -99,6 +99,36 @@
           </customer_register_checkout_handler>
         </observers>
       </customer_register_checkout>
+      <sales_order_place_after> <!-- identifier of the event we want to catch -->
+            <observers>
+              <sales_order_place_after_handler> <!-- identifier of the event handler -->
+                <type>model</type> <!-- class method call type; valid are model, object and singleton -->
+                <class>mobileadmin/observer</class> <!-- observers class alias -->
+                <method>saveOrderAfter</method>  <!-- observer's method to be called -->
+                <args></args> <!-- additional arguments passed to observer -->
+              </sales_order_place_after_handler>
+            </observers>
+        </sales_order_place_after>
+        
+        <controller_action_layout_load_before> <!-- identifier of the event we want to catch -->
+
+         <observers>
+
+          <controller_action_layout_load_before_handler> <!-- identifier of the event handler -->
+
+            <type>model</type> <!-- class method call type; valid are model, object and singleton -->
+
+            <class>EmizenTech_MobileAdmin_Helper_Data</class> <!-- observers class alias --> 
+
+            <method>loadBefore</method>  <!-- observer's method to be called -->
+
+            <args></args> <!-- additional arguments passed to observer -->
+
+          </controller_action_layout_load_before_handler>
+
+        </observers>
+
+      </controller_action_layout_load_before>
     </events>
   </global>
 </config> 
