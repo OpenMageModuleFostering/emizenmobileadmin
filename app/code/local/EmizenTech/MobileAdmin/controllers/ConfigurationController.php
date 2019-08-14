@@ -28,19 +28,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				// Default countries Process
 				$countryAcion['countries'] = Mage::getModel('directory/country')->getResourceCollection()->load()->toOptionArray(false);
 
-				$countryAcion['selectedCountryValue'] = Mage::getStoreConfig('general/country/default', $storeId);
-
-				//Mage::log($countryAcion['selectedCountryValue'],null,"cart_android.log");
-
-				$countryAcion['selectedCountryLabel'] = Mage::getModel("directory/country")->load($countryAcion['selectedCountryValue'])->getName();
-				//Mage::log($countryAcion['selectedCountryLabel'],null,"cart_android.log");
-				$countryValue = $post_data['countryVal'];
-				if(!empty($countryValue))
+				//$countryValue = $post_data['countryVal'];
+				if(isset($post_data['countryVal']))
 				{
 					if($storeId == 0)
 					{
-						Mage::getConfig()->saveConfig('general/country/default', $countryValue);
-						Mage::getConfig()->saveConfig('general/country/default', $countryValue, 'stores', $storeId);	
+						Mage::getConfig()->saveConfig('general/country/default', $post_data['countryVal']);
+						Mage::getConfig()->saveConfig('general/country/default', $post_data['countryVal'], 'stores', $storeId);	
 					}
 					else
 					{
@@ -53,9 +47,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					Mage::getConfig()->reinit();
 					Mage::app()->reinitStores();	
 				}
+				$countryAcion['selectedCountryValue'] = Mage::getStoreConfig('general/country/default', $storeId);
+
+				//Mage::log($countryAcion['selectedCountryValue'],null,"cart_android.log");
+
+				$countryAcion['selectedCountryLabel'] = Mage::getModel("directory/country")->load($countryAcion['selectedCountryValue'])->getName();
+				//Mage::log($countryAcion['selectedCountryLabel'],null,"cart_android.log");
+				
 
 
 				// Allow Countries Process
+				//Mage::log($countryAcion['allowCountriesStatus'],null,"cart_android.log");
+				//$allowCountriesValue = $post_data['allowCountryVal'];
+				if(isset($post_data['allowCountryVal']))
+				{
+					$csv = implode(",", $post_data['allowCountryVal']);
+					// Mage::log($storeId,null,"cart_android.log");
+					// Mage::log($csv,null,"cart_android.log");
+					$config = Mage::getModel('core/config');
+					//Mage::getConfig()->saveConfig('general/country/allow', $csv, 'default', $storeId);
+					if($storeId == 0)
+					{
+						Mage::getConfig()->saveConfig('general/country/allow', $csv, 'default', $storeId);
+					}
+					else
+					{
+						Mage::getConfig()->saveConfig('general/country/allow', $csv, 'stores', $storeId);
+					}
+					$countryAcion['successMessage'] = "Allow Countries Has Been Saved On ".$storeName." Store.";
+					//Mage::log($countryAcion['successMessage'],null,"cart_android.log");
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
 				$allowCountriesSelectedValue = Mage::getStoreConfig('general/country/allow', $storeId);
 				$explodedVal = explode(",", $allowCountriesSelectedValue);
 				foreach ($explodedVal as $value)
@@ -82,33 +105,22 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						$countryAcion['allowCountriesStatus'][] = $counVal;
 					}
 				}
-				//Mage::log($countryAcion['allowCountriesStatus'],null,"cart_android.log");
-				$allowCountriesValue = $post_data['allowCountryVal'];
-				if(!empty($allowCountriesValue))
-				{
-					$csv = implode(",", $allowCountriesValue);
-					// Mage::log($storeId,null,"cart_android.log");
-					// Mage::log($csv,null,"cart_android.log");
-					$config = Mage::getModel('core/config');
-					//Mage::getConfig()->saveConfig('general/country/allow', $csv, 'default', $storeId);
-					if($storeId == 0)
-					{
-						Mage::getConfig()->saveConfig('general/country/allow', $csv, 'default', $storeId);
-					}
-					else
-					{
-						Mage::getConfig()->saveConfig('general/country/allow', $csv, 'stores', $storeId);
-					}
-					$countryAcion['successMessage'] = "Allow Countries Has Been Saved On ".$storeName." Store.";
-					//Mage::log($countryAcion['successMessage'],null,"cart_android.log");
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
 
 	
 
 				//Postal Code is Optional for the following countries Pocess
-				$postalCodeSelectedValue = Mage::getStoreConfig('general/country/optional_zip_countries', $storeId);
+				//$postalCountriesValue = $post_data['postalCountryVal'];
+				if(isset($post_data['postalCountryVal']))
+				{
+					$csv = implode(",", $post_data['postalCountryVal']);
+					//Mage::log($csv,null,"cart_android.log");
+					$config = Mage::getModel('core/config');
+					Mage::getConfig()->saveConfig('general/country/optional_zip_countries', $csv, 'default', 0);
+					$countryAcion['successMessage'] = "Postal Code Has Been Saved For The Following Countries On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
+				$postalCodeSelectedValue = Mage::getStoreConfig('general/country/optional_zip_countries');
 				$postalExplodedVal = explode(",", $postalCodeSelectedValue);
 				foreach ($postalExplodedVal as $value)
 				{
@@ -133,21 +145,20 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					}
 				}
 
-				$postalCountriesValue = $post_data['postalCountryVal'];
-				if(!empty($postalCountriesValue))
-				{
-					$csv = implode(",", $postalCountriesValue);
-					//Mage::log($csv,null,"cart_android.log");
-					$config = Mage::getModel('core/config');
-					Mage::getConfig()->saveConfig('general/country/optional_zip_countries', $csv, 'default', $storeId);
-					$countryAcion['successMessage'] = "Postal Code Has Been Saved For The Following Countries On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
-
 
 
 				//European Union Countries
+				//$unionCountriesValue = $post_data['unionCountryVal'];
+				if(isset($post_data['unionCountryVal']))
+				{
+					$csv = implode(",", $post_data['unionCountryVal']);
+					//Mage::log($csv,null,"cart_android.log");
+					//$config = Mage::getModel('core/config');
+					Mage::getConfig()->saveConfig('general/country/eu_countries', $csv, 'default', $storeId);
+					$countryAcion['successMessage'] = "European Union Countries Has Been Saved On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
 				$unionCountriesValue = Mage::getStoreConfig('general/country/eu_countries', $storeId);
 				$unionExplodedVal = explode(",", $unionCountriesValue);
 				foreach ($unionExplodedVal as $value)
@@ -173,17 +184,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					}
 				}
 
-				$unionCountriesValue = $post_data['unionCountryVal'];
-				if(!empty($unionCountriesValue))
-				{
-					$csv = implode(",", $unionCountriesValue);
-					//Mage::log($csv,null,"cart_android.log");
-					//$config = Mage::getModel('core/config');
-					Mage::getConfig()->saveConfig('general/country/eu_countries', $csv, 'default', $storeId);
-					$countryAcion['successMessage'] = "European Union Countries Has Been Saved On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
 
 				//echo "<pre>"; print_r($countryAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($countryAcion);
@@ -226,6 +226,19 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				// State is required for
 				$statesCountries = Mage::getModel('directory/country')->getResourceCollection()->load()->toOptionArray(false);
 
+				//$statesCountriesValue = $post_data['statesCountryVal'];
+
+				if(isset($post_data['statesCountryVal']))
+				{
+					$csv = implode(",", $post_data['statesCountryVal']);
+					//Mage::log($csv,null,"cart_android.log");
+					//Mage::getConfig()->saveConfig('general/region/state_required', $csv, 'default', $storeId);
+					Mage::getConfig()->saveConfig('general/region/state_required', $csv);
+					$statesAcion['successMessage'] = "State Has Been Saved For The Following Countries On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
+
 				$statesValue = Mage::getStoreConfig('general/region/state_required','default');
 				$statesExplodedVal = explode(",", $statesValue);
 
@@ -255,24 +268,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					}
 				}
 
-				$statesCountriesValue = $post_data['statesCountryVal'];
-				if(!empty($statesCountriesValue))
-				{
-					$csv = implode(",", $statesCountriesValue);
-					//Mage::log($csv,null,"cart_android.log");
-					//Mage::getConfig()->saveConfig('general/region/state_required', $csv, 'default', $storeId);
-					Mage::getConfig()->saveConfig('general/region/state_required', $csv);
-					$statesAcion['successMessage'] = "State Has Been Saved For The Following Countries On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
-
 
 				// Display not required State
-				$statesValueDisplay = Mage::getStoreConfig('general/region/display_all');
-
-				$statesAcion['statesDsiplayVal'] = $statesValueDisplay;
-
 				$statesReqValue = $post_data['statesReq'];
 				if($statesReqValue == 0 || $statesReqValue == 1)
 				{
@@ -282,6 +279,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					Mage::getConfig()->reinit();
 					Mage::app()->reinitStores();
 				}
+
+				$statesValueDisplay = Mage::getStoreConfig('general/region/display_all');
+
+				$statesAcion['statesDsiplayVal'] = $statesValueDisplay;
+
 
 				//echo "<pre>"; print_r($statesExplodedVal); die;
 				$jsonData = Mage::helper('core')->jsonEncode($statesAcion);
@@ -325,6 +327,16 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				// Timezone
 				$timezones = Mage::getModel('core/locale')->getOptionTimezones();
 				//$localeAction['timezones'] = $timezones;
+
+				//$timezonesVal = $post_data['timezoneVal'];
+				if(isset($post_data['timezoneVal']))
+				{
+					Mage::getConfig()->saveConfig('general/locale/timezone', $post_data['timezoneVal'], 'default');
+					$localeAction['successMessage'] = "Timezone Saved On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
+
 				$timezoneValues = Mage::getStoreConfig('general/locale/timezone');
 				//$localeAction['timezoneSelected'] = $timezoneValues;
 				//echo "<pre>"; print_r($timezones); die;
@@ -347,16 +359,7 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				}
 				$localeAction['timezoneListSelected'] = $timezoneAnotherArr;
 				// /echo $timezoneValues; die;
-
-
-				$timezonesVal = $post_data['timezoneVal'];
-				if(!empty($timezonesVal))
-				{
-					Mage::getConfig()->saveConfig('general/locale/timezone', $timezonesVal, 'default');
-					$localeAction['successMessage'] = "Timezone Saved On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
+				
 
 
 				
@@ -388,6 +391,22 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 
 
 				// First day of week
+				//$weekDayVal = $post_data['weekDays'];
+				if(isset($post_data['weekDays']))
+				{
+					if($storeId == 0)
+					{
+						Mage::getConfig()->saveConfig('general/locale/firstday', $post_data['weekDays'], 'default', $storeId);
+					}
+					else
+					{
+						Mage::getConfig()->saveConfig('general/locale/firstday', $post_data['weekDays'], 'stores', $storeId);
+					}
+					$localeAction['successMessage'] = "First Day Of Week Saved On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
+
 				$weekDaySelected = Mage::getStoreConfig('general/locale/firstday', $storeId);
 				//$weekDaySelected['slel'][] = Mage::getStoreConfig('general/locale/firstday');
 
@@ -412,26 +431,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					}
 				}
 				$localeAction['weekDaysArr'] = $makeAnotherArr;
-
-				$weekDayVal = $post_data['weekDays'];
-				if(!empty($weekDayVal))
-				{
-					if($storeId == 0)
-					{
-						Mage::getConfig()->saveConfig('general/locale/firstday', $weekDayVal, 'default', $storeId);
-					}
-					else
-					{
-						Mage::getConfig()->saveConfig('general/locale/firstday', $weekDayVal, 'stores', $storeId);
-					}
-					$localeAction['successMessage'] = "First Day Of Week Saved On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
 				
 
 
 				// Weekend Days
+				//$weekendDayVal = $post_data['weekendDays'];
+				if(isset($post_data['weekendDays']))
+				{
+					$makeStr = implode(',', $weekendDayVal);
+					if($storeId == 0)
+					{
+						Mage::getConfig()->saveConfig('general/locale/weekend', $post_data['weekendDays'], 'default', $storeId);
+					}
+					else
+					{
+						Mage::getConfig()->saveConfig('general/locale/weekend', $post_data['weekendDays'], 'stores', $storeId);
+					}
+					$localeAction['successMessage'] = "Weekend Days Saved On ".$storeName." Store.";
+					Mage::getConfig()->reinit();
+					Mage::app()->reinitStores();
+				}
 				$weekendDaySelected = Mage::getStoreConfig('general/locale/weekend', $storeId);
 				//echo $weekendDaySelected;
 				$weekendExplode = explode(',', $weekendDaySelected);
@@ -461,22 +480,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				}
 				$localeAction['weekendDaysMulti'] = $weekendAnotherArr;
 
-				$weekendDayVal = $post_data['weekendDays'];
-				if(!empty($weekendDayVal))
-				{
-					$makeStr = implode(',', $weekendDayVal);
-					if($storeId == 0)
-					{
-						Mage::getConfig()->saveConfig('general/locale/weekend', $makeStr, 'default', $storeId);
-					}
-					else
-					{
-						Mage::getConfig()->saveConfig('general/locale/weekend', $makeStr, 'stores', $storeId);
-					}
-					$localeAction['successMessage'] = "Weekend Days Saved On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
-				}
 
 				//echo "<pre>"; print_r($weekendAnotherArr); die;
 				$jsonData = Mage::helper('core')->jsonEncode($localeAction);
@@ -529,8 +532,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				// die;
 
 				// Add store code to URL's
-				$storeCodeUrlAction['selectedStoreCode'] = Mage::getStoreConfig('web/url/use_store');
-
 				//$storeCodeValue = is;
 				if(isset($post_data['selectedStoreVal']))
 				{
@@ -539,12 +540,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					Mage::getConfig()->reinit();
 					Mage::app()->reinitStores();
 				}
+				$storeCodeUrlAction['selectedStoreCode'] = Mage::getStoreConfig('web/url/use_store');
 
 
 
 				// Auto-redirect to Base URL
-				$storeCodeUrlAction['selectedAutoRedirect'] = Mage::getStoreConfig('web/url/redirect_to_base');
-
 				// $autoRedirectValue = $post_data['selectedRedirect'];
 				if(isset($post_data['selectedRedirect']))
 				{
@@ -555,12 +555,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					Mage::getConfig()->reinit();
 					Mage::app()->reinitStores();
 				}
+				$storeCodeUrlAction['selectedAutoRedirect'] = Mage::getStoreConfig('web/url/redirect_to_base');
 
 
 
 				// Search Engines Optimization
-				$storeCodeUrlAction['webServerRewriteSlectedValue'] = Mage::getStoreConfig('web/seo/use_rewrites', $storeId);
-
 				//$webRewritesValue = $post_data['webRewriteVal'];
 				if(isset($post_data['webRewriteVal']))
 				{
@@ -579,17 +578,16 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 					}
 					
 					$storeCodeUrlAction['successMessage'] = "Search Engine Optimization Saved On ".$storeName." Store.";
-					Mage::getConfig()->reinit();
-					Mage::app()->reinitStores();
+					// Mage::getConfig()->reinit();
+					// Mage::app()->reinitStores();
 				}
+				$storeCodeUrlAction['webServerRewriteSlectedValue'] = Mage::getStoreConfig('web/seo/use_rewrites', $storeId);
 
 
 
 				//////// Unsecure
 
 					//Base URL
-					$storeCodeUrlAction['baseUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
-
 					//$baseUrlValue = $post_data['baseUrlVal'];
 					if(isset($post_data['baseUrlVal']))
 					{
@@ -611,11 +609,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_url', $storeId);
+
+					
 
 
 					//Base Link URL
-					$storeCodeUrlAction['baseLinkUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_link_url', $storeId);
-
 					// $baseLinkUrlValue = $post_data['baseLinkUrlVal'];
 					if(isset($post_data['baseLinkUrlVal']))
 					{
@@ -637,11 +636,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseLinkUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_link_url', $storeId);
+
+					
 
 
 					//Base Skin URL
-					$storeCodeUrlAction['baseSkinUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_skin_url', $storeId);
-
 					// $baseSkinUrlValue = $post_data['baseSkinUrlVal'];
 					if(isset($post_data['baseSkinUrlVal']))
 					{
@@ -663,12 +663,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseSkinUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_skin_url', $storeId);
+
 
 
 
 					//Base Media URL
-					$storeCodeUrlAction['baseMediaUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_media_url', $storeId);
-
 					//$baseMediaUrlValue = $post_data['baseMediaUrlVal'];
 					if(isset($post_data['baseMediaUrlVal']))
 					{
@@ -690,13 +690,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseMediaUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_media_url', $storeId);
+					
 
 
 
 					//Base JavaScript URL
-					$storeCodeUrlAction['baseJavaUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_js_url', $storeId);
-					//Mage::log($storeCodeUrlAction['baseJavaUrlSelectedValue'], null, "cart_android.log");
-					//$baseJavaUrlValue = $post_data['baseJavaUrlVal'];
 					if(isset($post_data['baseJavaUrlVal']))
 					{
 						//Mage::log($baseJavaUrlValue, null, "cart_android.log");
@@ -722,6 +721,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseJavaUrlSelectedValue'] = Mage::getStoreConfig('web/unsecure/base_js_url', $storeId);
+					//Mage::log($storeCodeUrlAction['baseJavaUrlSelectedValue'], null, "cart_android.log");
+					//$baseJavaUrlValue = $post_data['baseJavaUrlVal'];
+					
 
 
 
@@ -729,8 +732,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//////// Secure
 
 					//Base URL
-					$storeCodeUrlAction['baseUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_url', $storeId);
-
 					//$baseUrlSecureValue = $post_data['baseUrlSecureVal'];
 					if(isset($post_data['baseUrlSecureVal']))
 					{
@@ -752,11 +753,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_url', $storeId);
+
+					
 
 
 					//Base Link URL
-					$storeCodeUrlAction['baseLinkUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_link_url', $storeId);
-
 					// $baseLinkUrlSecureValue = $post_data['baseLinkUrlSecureVal'];
 					if(isset($post_data['baseLinkUrlSecureVal']))
 					{
@@ -778,11 +780,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseLinkUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_link_url', $storeId);
+
+					
 
 
 					//Base Skin URL
-					$storeCodeUrlAction['baseSkinUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_skin_url', $storeId);
-
 					//$baseSkinUrlSecureValue = $post_data['baseSkinUrlSecureVal'];
 					if(isset($post_data['baseSkinUrlSecureVal']))
 					{
@@ -804,12 +807,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseSkinUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_skin_url', $storeId);
+
+					
 
 
 
 					//Base Media URL
-					$storeCodeUrlAction['baseMediaUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_media_url', $storeId);
-
 					//$baseMediaUrlSecureValue = $post_data['baseMediaUrlSecureVal'];
 					if(isset($post_data['baseMediaUrlSecureVal']))
 					{
@@ -831,12 +835,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseMediaUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_media_url', $storeId);
+
+					
 
 
 
 					//Base JavaScript URL
-					$storeCodeUrlAction['baseJavaUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_js_url', $storeId);
-
 					//$baseJavaUrlSecureValue = $post_data['baseJavaUrlSecureVal'];
 					if(isset($post_data['baseJavaUrlSecureVal']))
 					{
@@ -858,11 +863,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['baseJavaUrlSecureSelectedValue'] = Mage::getStoreConfig('web/secure/base_js_url', $storeId);
+
+					
 
 
 
 					//Use Secure URLs in Frontend
-					$storeCodeUrlAction['secureUrlFrontendSelectedValue'] = Mage::getStoreConfig('web/secure/use_in_frontend', $storeId);
 					//$secureUrlFrontendValue = $post_data['secureUrlFrontendVal'];
 					if(isset($post_data['secureUrlFrontendVal']))
 					{
@@ -879,11 +886,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['secureUrlFrontendSelectedValue'] = Mage::getStoreConfig('web/secure/use_in_frontend', $storeId);
+					
 
 
 
 					//Use Secure URLs in Admin
-					$storeCodeUrlAction['secureUrlAdminSelectedValue'] = Mage::getStoreConfig('web/secure/use_in_adminhtml');
 					//$secureUrlAdminValue = $post_data['secureUrlAdminVal'];
 					if(isset($post_data['secureUrlAdminVal']))
 					{
@@ -893,11 +901,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['secureUrlAdminSelectedValue'] = Mage::getStoreConfig('web/secure/use_in_adminhtml');
+					
 
 
 
 					//Offloader header
-					$storeCodeUrlAction['offloaderHeaderSelectedValue'] = Mage::getStoreConfig('web/secure/offloader_header');
 					//$offloaderHeaderValue = $post_data['offloaderHeaderVal'];
 					if(isset($post_data['offloaderHeaderVal']))
 					{
@@ -907,13 +916,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['offloaderHeaderSelectedValue'] = Mage::getStoreConfig('web/secure/offloader_header');
+					
 
 
 
 				//Default Pages
 
 					//Default Web URL
-					$storeCodeUrlAction['defaultWebUrlSelectedValue'] = Mage::getStoreConfig('web/default/front', $storeId);
 					//$defaultWebUrlValue = $post_data['defaultWebUrlVal'];
 					if(isset($post_data['defaultWebUrlVal']))
 					{
@@ -930,11 +940,30 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['defaultWebUrlSelectedValue'] = Mage::getStoreConfig('web/default/front', $storeId);
+					
 
 
 
 					//CMS Home Page
 					$AllCmsPages = Mage::getModel('cms/page')->getCollection()->toOptionArray();
+
+					//$cmsHomeValue = $post_data['cmsHomeVal'];
+					if(isset($post_data['cmsHomeVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_home_page', $post_data['cmsHomeVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_home_page', $post_data['cmsHomeVal'], 'stores', $storeId);
+						}
+						
+						$storeCodeUrlAction['successMessage'] = "Default Home Page Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 
 					$selected = Mage::getStoreConfig('web/default/cms_home_page', $storeId);
 
@@ -956,27 +985,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					//$cmsHomeValue = $post_data['cmsHomeVal'];
-					if(isset($post_data['cmsHomeVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_home_page', $post_data['cmsHomeVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_home_page', $post_data['cmsHomeVal'], 'stores', $storeId);
-						}
-						
-						$storeCodeUrlAction['successMessage'] = "Default Home Page Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
+					
 
 					
 					//Default No-route URL
-					$storeCodeUrlAction['noRouteSelectedValue'] = Mage::getStoreConfig('web/default/no_route', 1);
-					//Mage::log($storeId, null, "cart_android.log");
 					//$noRouteValue = $post_data['noRouteVal'];
 					if(isset($post_data['noRouteVal']))
 					{
@@ -993,10 +1005,29 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['noRouteSelectedValue'] = Mage::getStoreConfig('web/default/no_route', 1);
+					//Mage::log($storeId, null, "cart_android.log");
+					
 
 
 
 					//CMS No Route Page
+					//$CmsNoRouteValue = $post_data['CmsNoRouteVal'];
+					if(isset($post_data['CmsNoRouteVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_no_route', $post_data['CmsNoRouteVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_no_route', $post_data['CmsNoRouteVal'], 'stores', $storeId);
+						}
+						
+						$storeCodeUrlAction['successMessage'] = "Cmd No-Route Page Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$noRoutePageselected = Mage::getStoreConfig('web/default/cms_no_route', $storeId);
 
 					foreach ($AllCmsPages as $value)
@@ -1017,27 +1048,28 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					//$CmsNoRouteValue = $post_data['CmsNoRouteVal'];
-					if(isset($post_data['CmsNoRouteVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_no_route', $post_data['CmsNoRouteVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_no_route', $post_data['CmsNoRouteVal'], 'stores', $storeId);
-						}
-						
-						$storeCodeUrlAction['successMessage'] = "Cmd No-Route Page Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
+					
 
 
 
 
 					//CMS No Cookies Page
+					//$noCookiesValue = $post_data['noCookiesVal'];
+					if(isset($post_data['noCookiesVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_no_cookies', $post_data['noCookiesVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('web/default/cms_no_cookies', $post_data['noCookiesVal'], 'stores', $storeId);
+						}
+						
+						$storeCodeUrlAction['successMessage'] = "Cmd No-Cookies Value Page Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$noCookiesPageselected = Mage::getStoreConfig('web/default/cms_no_cookies', $storeId);
 
 					foreach ($AllCmsPages as $value)
@@ -1058,27 +1090,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					//$noCookiesValue = $post_data['noCookiesVal'];
-					if(isset($post_data['noCookiesVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_no_cookies', $post_data['noCookiesVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('web/default/cms_no_cookies', $post_data['noCookiesVal'], 'stores', $storeId);
-						}
-						
-						$storeCodeUrlAction['successMessage'] = "Cmd No-Cookies Value Page Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
+					
 
 
 
 					//Show Breadcrumbs for CMS Pages
-					$storeCodeUrlAction['breadCrumbsValue'] = Mage::getStoreConfig('web/default/show_cms_breadcrumbs', $storeId);
 					//$breadcrumbsValue = $post_data['breadCrumbsVal'];
 					if(isset($post_data['breadCrumbsVal']))
 					{
@@ -1095,13 +1111,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['breadCrumbsValue'] = Mage::getStoreConfig('web/default/show_cms_breadcrumbs', $storeId);
+					
 
 
 
 				//Polls
 
 					//Disallow Voting in a Poll Multiple Times from Same IP-address
-					$storeCodeUrlAction['pollsValue'] = Mage::getStoreConfig('web/polls/poll_check_by_ip', $storeId);
 					//$pollValue = $post_data['pollVal'];
 					if(isset($post_data['pollVal']))
 					{
@@ -1118,13 +1135,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['pollsValue'] = Mage::getStoreConfig('web/polls/poll_check_by_ip', $storeId);
+					
 
 
 
 				//Session Cookie Management
 
 					//Cookie Lifetime
-					$storeCodeUrlAction['cookieLifetimeValue'] = Mage::getStoreConfig('web/cookie/cookie_lifetime', $storeId);
 					//$cookieLifetimeValue = $post_data['cookieLifetimeVal'];
 					if(isset($post_data['cookieLifetimeVal']))
 					{
@@ -1141,10 +1159,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['cookieLifetimeValue'] = Mage::getStoreConfig('web/cookie/cookie_lifetime', $storeId);
+					
 
 
 					//Cookie Path
-					$storeCodeUrlAction['cookiePaathValue'] = Mage::getStoreConfig('web/cookie/cookie_path', $storeId);
 					// $cookiePaathValue = $post_data['cookiePaathVal'];
 					if(isset($post_data['cookiePaathVal']))
 					{
@@ -1161,11 +1180,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['cookiePaathValue'] = Mage::getStoreConfig('web/cookie/cookie_path', $storeId);
+					
 
 
 
 					//Cookie Domain
-					$storeCodeUrlAction['cookieDomainValue'] = Mage::getStoreConfig('web/cookie/cookie_domain', $storeId);
 					//$cookieDomainValue = $post_data['cookieDomainVal'];
 					if(isset($post_data['cookieDomainVal']))
 					{
@@ -1182,11 +1202,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['cookieDomainValue'] = Mage::getStoreConfig('web/cookie/cookie_domain', $storeId);
+					
 
 
 
 					//Use HTTP Only
-					$storeCodeUrlAction['httpOnlyValue'] = Mage::getStoreConfig('web/cookie/cookie_httponly', $storeId);
 					//$httpOnlyValue = $post_data['httpOnlyVal'];
 					if(isset($post_data['httpOnlyVal']))
 					{
@@ -1203,11 +1224,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['httpOnlyValue'] = Mage::getStoreConfig('web/cookie/cookie_httponly', $storeId);
+					
 
 
 
 					//Cookie Restriction Mode
-					$storeCodeUrlAction['cookieRestrictionModeValue'] = Mage::getStoreConfig('web/cookie/cookie_restriction');
 					//$cookieRestrictionModeValue = $post_data['cookieRestrictionModeVal'];
 					if(isset($post_data['cookieRestrictionModeVal']))
 					{
@@ -1217,6 +1239,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['cookieRestrictionModeValue'] = Mage::getStoreConfig('web/cookie/cookie_restriction');
+					
 
 
 
@@ -1224,7 +1248,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Session Validation Settings
 
 					//Validate REMOTE_ADDR
-					$storeCodeUrlAction['validateRemoteValue'] = Mage::getStoreConfig('web/session/use_remote_addr');
 					//$validateRemoteValue = $post_data['validateRemoteVal'];
 					if(isset($post_data['validateRemoteVal']))
 					{
@@ -1234,11 +1257,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['validateRemoteValue'] = Mage::getStoreConfig('web/session/use_remote_addr');
+					
 
 
 
 					//Validate HTTP_VIA
-					$storeCodeUrlAction['validateHttpValue'] = Mage::getStoreConfig('web/session/use_http_via');
 					//$validateHttpValue = $post_data['validateHttpVal'];
 					if(isset($post_data['validateHttpVal']))
 					{
@@ -1248,11 +1272,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['validateHttpValue'] = Mage::getStoreConfig('web/session/use_http_via');
+					
 
 
 
 					//Validate HTTP_X_FORWARDED_FOR
-					$storeCodeUrlAction['validateHttpXXValue'] = Mage::getStoreConfig('web/session/use_http_x_forwarded_for');
 					//$validateHttpXXValue = $post_data['validateHttpXXVal'];
 					if(isset($post_data['validateHttpXXVal']))
 					{
@@ -1262,11 +1287,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['validateHttpXXValue'] = Mage::getStoreConfig('web/session/use_http_x_forwarded_for');
+					
 
 
 
 					//Validate HTTP_USER_AGENT
-					$storeCodeUrlAction['validateHttpUserValue'] = Mage::getStoreConfig('web/session/use_http_user_agent');
 					//$validateHttpUserValue = $post_data['validateHttpUserVal'];
 					if(isset($post_data['validateHttpUserVal']))
 					{
@@ -1276,11 +1302,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['validateHttpUserValue'] = Mage::getStoreConfig('web/session/use_http_user_agent');
+					
 
 
 
 					//Use SID on Frontend
-					$storeCodeUrlAction['useSIDValue'] = Mage::getStoreConfig('web/session/use_frontend_sid');
 					//$useSIDValue = $post_data['useSIDVal'];
 					if(isset($post_data['useSIDVal']))
 					{
@@ -1291,12 +1318,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$storeCodeUrlAction['useSIDValue'] = Mage::getStoreConfig('web/session/use_frontend_sid');
+					
+
 
 
 				//Browser Capabilities Detection
 
 					//Redirect to CMS-page if Cookies are Disabled
-					$storeCodeUrlAction['redirectToCmsValue'] = Mage::getStoreConfig('web/browser_capabilities/cookies', $storeId);
 					//$redirectToCmsValue = $post_data['redirectToCmsVal'];
 					if(isset($post_data['redirectToCmsVal']))
 					{
@@ -1313,11 +1342,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeCodeUrlAction['redirectToCmsValue'] = Mage::getStoreConfig('web/browser_capabilities/cookies', $storeId);
+					
 
 
 
 					//Show Notice if JavaScript is Disabled
-					$storeCodeUrlAction['showNoticeValue'] = Mage::getStoreConfig('web/browser_capabilities/javascript', $storeId);
 					//$showNoticeValue = $post_data['showNoticeVal'];
 					if(isset($post_data['showNoticeVal']))
 					{
@@ -1334,8 +1364,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
-
-
+					$storeCodeUrlAction['showNoticeValue'] = Mage::getStoreConfig('web/browser_capabilities/javascript', $storeId);
+					
 
 				// echo "<pre>"; print_r($storeCodeUrlAction); die;
 				$jsonData = Mage::helper('core')->jsonEncode($storeCodeUrlAction);
@@ -1389,6 +1419,18 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 
 					//Base Currency
 					$currenciesList = Mage::app()->getLocale()->getOptionCurrencies();
+
+					//$baseCurrValue = $post_data['baseCurrVal'];
+					if(isset($post_data['baseCurrVal']))
+					{
+						//Mage::log($post_data['baseCurrVal'], null, "cart_android.log");
+						Mage::getConfig()->saveConfig('currency/options/base', $post_data['baseCurrVal'], 'default', 0);
+						
+						$storeCodeUrlAction['successMessage'] = "Base Currency Value Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$selectedCurrency = Mage::getStoreConfig('currency/options/base', 0);
 					
 					foreach ($currenciesList as $value)
@@ -1409,20 +1451,28 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					//$baseCurrValue = $post_data['baseCurrVal'];
-					if(isset($post_data['baseCurrVal']))
-					{
-						//Mage::log($post_data['baseCurrVal'], null, "cart_android.log");
-						Mage::getConfig()->saveConfig('currency/options/base', $post_data['baseCurrVal'], 'default', 0);
-						
-						//$storeCodeUrlAction['successMessage'] = "Base Currency Value Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
+					
 
 
 
 					//Default Display Currency
+					//$defaultDisCurrValue = $post_data['defaultDisplayCurrVal'];
+					if(isset($post_data['defaultDisplayCurrVal']))
+					{
+						//Mage::log("nav", null, "cart_android.log");
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('currency/options/default', $post_data['defaultDisplayCurrVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('currency/options/default', $post_data['defaultDisplayCurrVal'], 'stores', $storeId);
+						}
+						
+						$currencySetupAction['successMessage'] = "Default Display Currency Value Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$selectedDefaultCurrency = Mage::getStoreConfig('currency/options/default', $storeId);
 					
 					foreach ($currenciesList as $value)
@@ -1443,27 +1493,28 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					//$defaultDisCurrValue = $post_data['defaultDisplayCurrVal'];
-					if(isset($post_data['defaultDisplayCurrVal']))
-					{
-						//Mage::log("nav", null, "cart_android.log");
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('currency/options/default', $post_data['defaultDisplayCurrVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('currency/options/default', $post_data['defaultDisplayCurrVal'], 'stores', $storeId);
-						}
-						
-						$currencySetupAction['successMessage'] = "Default Display Currency Value Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
 					//echo "<pre>"; print_r($currencySetupAction); die;
 
 
 					//Allowed Currencies
+					//$allowedCurrValue = $post_data['allowedCurrVal'];
+					if(isset($post_data['allowedCurrVal']))
+					{
+						//Mage::log($post_data['allowedCurrVal'], null, "cart_android.log");
+						$implodeVal = implode(',', $post_data['allowedCurrVal']);
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('currency/options/allow', $implodeVal, 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('currency/options/allow', $implodeVal, 'stores', $storeId);
+						}
+						
+						$currencySetupAction['successMessage'] = "Allowed Currencies Value Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$allowedCurrencies = Mage::getStoreConfig('currency/options/allow', $storeId);
 					$explodedCurr = explode(',', $allowedCurrencies);
 					foreach ($explodedCurr as $value)
@@ -1489,24 +1540,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 					//echo "<pre>"; print_r($currencySetupAction1); die;
-					//$allowedCurrValue = $post_data['allowedCurrVal'];
-					if(isset($post_data['allowedCurrVal']))
-					{
-						//Mage::log($post_data['allowedCurrVal'], null, "cart_android.log");
-						$implodeVal = implode(',', $post_data['allowedCurrVal']);
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('currency/options/allow', $implodeVal, 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('currency/options/allow', $implodeVal, 'stores', $storeId);
-						}
-						
-						$currencySetupAction['successMessage'] = "Allowed Currencies Value Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
 
 
 
@@ -1514,17 +1547,17 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Webservicex
 
 					//Connection Timeout in Seconds
-					$currencySetupAction['connectionTimedOutSelectedValue'] = Mage::getStoreConfig('currency/webservicex/timeout');
-
 					if(isset($post_data['connectionTimedOutVal']))
 					{
 						//Mage::log($post_data['baseCurrVal'], null, "cart_android.log");
 						Mage::getConfig()->saveConfig('currency/webservicex/timeout', $post_data['connectionTimedOutVal'], 'default', 0);
 						
 						$storeCodeUrlAction['successMessage'] = "Connection Timeout Value Saved in Seconds On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
+						// Mage::getConfig()->reinit();
+						// Mage::app()->reinitStores();
 					}
+					$currencySetupAction['connectionTimedOutSelectedValue'] = Mage::getStoreConfig('currency/webservicex/timeout');
+
 
 				//echo "<pre>"; print_r($currencySetupAction); die;
 				$jsonData = Mage::helper('core')->jsonEncode($currencySetupAction);
@@ -1571,8 +1604,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//General Contact
 
 					//Sender Name
-					$storeEmailAddresses['generalSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_general/name', $storeId);
-					
 					if(isset($post_data['generalSenderNameVal']))
 					{
 						if($storeId == 0)
@@ -1588,10 +1619,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['generalSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_general/name', $storeId);
+					
+					
 
 					//Sender Email
-					$storeEmailAddresses['generalSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_general/email', $storeId);
-					
 					if(isset($post_data['generalSenderEmailVal']))
 					{
 						if($storeId == 0)
@@ -1607,6 +1639,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['generalSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_general/email', $storeId);
+					
 
 
 
@@ -1614,8 +1648,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Sales Representative
 
 					//Sender Name
-					$storeEmailAddresses['salesSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_sales/name', $storeId);
-					
 					if(isset($post_data['salesSenderNameVal']))
 					{
 						if($storeId == 0)
@@ -1631,10 +1663,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['salesSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_sales/name', $storeId);
+					
+					
 
 					//Sender Email
-					$storeEmailAddresses['salesSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_sales/email', $storeId);
-					
 					if(isset($post_data['salesSenderEmailVal']))
 					{
 						if($storeId == 0)
@@ -1650,6 +1683,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['salesSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_sales/email', $storeId);
+					
 
 
 
@@ -1657,8 +1692,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Customer Support
 
 					//Sender Name
-					$storeEmailAddresses['customerSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_support/name', $storeId);
-					
 					if(isset($post_data['customerSenderNameVal']))
 					{
 						if($storeId == 0)
@@ -1674,10 +1707,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['customerSenderNameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_support/name', $storeId);
+					
+					
 
 					//Sender Email
-					$storeEmailAddresses['customerSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_support/email', $storeId);
-					
 					if(isset($post_data['customerSenderEmailVal']))
 					{
 						if($storeId == 0)
@@ -1693,6 +1727,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['customerSenderEmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_support/email', $storeId);
+					
 
 
 
@@ -1700,8 +1736,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Custom Email 1
 
 					//Sender Name
-					$storeEmailAddresses['custom1NameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom1/name', $storeId);
-					
 					if(isset($post_data['custom1SenderNameVal']))
 					{
 						if($storeId == 0)
@@ -1717,10 +1751,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['custom1NameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom1/name', $storeId);
+					
+					
 
 					//Sender Email
-					$storeEmailAddresses['custom1EmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom1/email', $storeId);
-					
 					if(isset($post_data['custom1EmailVal']))
 					{
 						if($storeId == 0)
@@ -1736,6 +1771,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['custom1EmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom1/email', $storeId);
+					
 
 
 
@@ -1743,8 +1780,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Custom Email 2
 
 					//Sender Name
-					$storeEmailAddresses['custom2NameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom2/name', $storeId);
-					
 					if(isset($post_data['custom2SenderNameVal']))
 					{
 						if($storeId == 0)
@@ -1760,10 +1795,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['custom2NameSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom2/name', $storeId);
+					
+					
 
 					//Sender Email
-					$storeEmailAddresses['custom2EmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom2/email', $storeId);
-					
 					if(isset($post_data['custom2EmailVal']))
 					{
 						if($storeId == 0)
@@ -1779,6 +1815,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeEmailAddresses['custom2EmailSelectedValue'] = Mage::getStoreConfig('trans_email/ident_custom2/email', $storeId);
+					
 
 				//echo "<pre>"; print_r($storeEmailAddresses); die;
 				$jsonData = Mage::helper('core')->jsonEncode($storeEmailAddresses);
@@ -1844,8 +1882,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Contact Us
 
 					//Enable Contact Us
-					$storeContacts['enableContactUsSelectedValue'] = Mage::getStoreConfig('contacts/contacts/enabled', $storeId);
-					
 					if(isset($post_data['enableContactUsVal']))
 					{
 						if($storeId == 0)
@@ -1861,14 +1897,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeContacts['enableContactUsSelectedValue'] = Mage::getStoreConfig('contacts/contacts/enabled', $storeId);
+					
 
 
 
 				//Email Options
 
 					//Send Emails To
-					$storeContacts['sendEmailsToSelectedValue'] = Mage::getStoreConfig('contacts/email/recipient_email', $storeId);
-					
 					if(isset($post_data['sendEmailsToVal']))
 					{
 						if($storeId == 0)
@@ -1884,9 +1920,27 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$storeContacts['sendEmailsToSelectedValue'] = Mage::getStoreConfig('contacts/email/recipient_email', $storeId);
+					
 
 
 					//Email Sender
+					if(isset($post_data['senderEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('contacts/email/sender_email_identity', $post_data['senderEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('contacts/email/sender_email_identity', $post_data['senderEmailVal'], 'stores', $storeId);
+						}
+						
+						$storeContacts['successMessage'] = "Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$emailSenderSelectedValue = Mage::getStoreConfig('contacts/email/sender_email_identity', $storeId);
 					foreach ($this->emailSendersListArray() as $value)
 					{
@@ -1906,25 +1960,25 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 		                }
 		            }
 
-		            if(isset($post_data['senderEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('contacts/email/sender_email_identity', $post_data['senderEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('contacts/email/sender_email_identity', $post_data['senderEmailVal'], 'stores', $storeId);
-						}
-						
-						$storeContacts['successMessage'] = "Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
 
 
 
 					//Email Template
+					if(isset($post_data['emailTemplateVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('contacts/email/email_template', $post_data['emailTemplateVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('contacts/email/email_template', $post_data['emailTemplateVal'], 'stores', $storeId);
+						}
+						
+						$storeContacts['successMessage'] = "Conatct Email Template updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$emailTemplateSelectedValue = Mage::getStoreConfig('contacts/email/email_template', $storeId);
 
 					$emailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
@@ -1953,21 +2007,7 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 					//echo $post_data['emailTemplateVal']."***";
-					if(isset($post_data['emailTemplateVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('contacts/email/email_template', $post_data['emailTemplateVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('contacts/email/email_template', $post_data['emailTemplateVal'], 'stores', $storeId);
-						}
-						
-						$storeContacts['successMessage'] = "Conatct Email Template updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
+					
 
 				//echo "<pre>"; print_r($storeContacts); die;
 				$jsonData = Mage::helper('core')->jsonEncode($storeContacts);
@@ -2012,6 +2052,22 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//WYSIWYG Options
 
 					//Enable WYSIWYG Editor
+					if(isset($post_data['editorVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('cms/wysiwyg/enabled', $post_data['editorVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('cms/wysiwyg/enabled', $post_data['editorVal'], 'stores', $storeId);
+						}
+						
+						$contentManagementAcion['successMessage'] = "WYSIWYG Editor Option updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$enableEditorSelectedValue = Mage::getStoreConfig('cms/wysiwyg/enabled', $storeId);
 
 					$ediorObj = new Mage_Adminhtml_Model_System_Config_Source_Cms_Wysiwyg_Enabled();
@@ -2037,26 +2093,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						}
 					}
 
-					if(isset($post_data['editorVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('cms/wysiwyg/enabled', $post_data['editorVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('cms/wysiwyg/enabled', $post_data['editorVal'], 'stores', $storeId);
-						}
-						
-						$contentManagementAcion['successMessage'] = "WYSIWYG Editor Option updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
 
 
 
 					//Use Static URLs for Media Content in WYSIWYG for Catalog
-					$contentManagementAcion['contentStaticSelectedValue'] = Mage::getStoreConfig('cms/wysiwyg/use_static_urls_in_catalog');
 					if(isset($post_data['contentStaticUrlVal']))
 					{
 						Mage::getConfig()->saveConfig('cms/wysiwyg/use_static_urls_in_catalog', $post_data['contentStaticUrlVal'], 'default', 0);
@@ -2065,7 +2105,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
-
+					$contentManagementAcion['contentStaticSelectedValue'] = Mage::getStoreConfig('cms/wysiwyg/use_static_urls_in_catalog');
+					
 
 				//echo "<pre>"; print_r($contentManagementAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($contentManagementAcion);
@@ -2111,7 +2152,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//General
 
 					//Hide Customer IP
-					$salesAcion['hideCustomerIpSelectedValue'] = Mage::getStoreConfig('sales/general/hide_customer_ip', $storeId);
 					if(isset($post_data['hideCustomerIpVal']))
 					{
 						if($storeId == 0)
@@ -2127,12 +2167,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['hideCustomerIpSelectedValue'] = Mage::getStoreConfig('sales/general/hide_customer_ip', $storeId);
+					
 
 
 				//Checkout Totals Sort Order
 
 					//Subtotal
-					$salesAcion['subtotalSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/subtotal');
 					if(isset($post_data['subtotalVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/subtotal', $post_data['subtotalVal'], 'default', 0);
@@ -2141,10 +2182,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['subtotalSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/subtotal');
+					
 
 
 					//Discount
-					$salesAcion['discountSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/discount');
 					if(isset($post_data['discountVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/discount', $post_data['discountVal'], 'default', 0);
@@ -2153,10 +2195,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['discountSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/discount');
+					
 
 
 					//Shipping
-					$salesAcion['shippingSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/shipping');
 					if(isset($post_data['shippingVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/shipping', $post_data['shippingVal'], 'default', 0);
@@ -2165,10 +2208,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['shippingSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/shipping');
+					
 
 
 					//Fixed Product Tax
-					$salesAcion['fixProductTaxSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/weee');
 					if(isset($post_data['fixProductTaxVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/weee', $post_data['fixProductTaxVal'], 'default', 0);
@@ -2177,10 +2221,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['fixProductTaxSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/weee');
+					
 
 
 					//Tax
-					$salesAcion['taxSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/tax');
 					if(isset($post_data['taxVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/tax', $post_data['taxVal'], 'default', 0);
@@ -2189,10 +2234,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['taxSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/tax');
+					
 
 
 					//Grand Total
-					$salesAcion['grandTotalSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/grand_total');
 					if(isset($post_data['grandTotalVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/totals_sort/grand_total', $post_data['grandTotalVal'], 'default', 0);
@@ -2201,13 +2247,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['grandTotalSelectedValue'] = Mage::getStoreConfig('sales/totals_sort/grand_total');
+					
 
 
 
 				//Reorder
 
 					//Allow Reorder
-					$salesAcion['allowReorderSelectedValue'] = Mage::getStoreConfig('sales/reorder/allow', $storeId);
 					if(isset($post_data['allowReorderVal']))
 					{
 						if($storeId == 0)
@@ -2223,13 +2270,14 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['allowReorderSelectedValue'] = Mage::getStoreConfig('sales/reorder/allow', $storeId);
+					
 
 
 
 				//Minimum Order Amount
 
 					//Enable
-					$salesAcion['minOrderEnableSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/active');
 					if(isset($post_data['minOrderEnableVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/minimum_order/active', $post_data['minOrderEnableVal'], 'default', 0);
@@ -2238,11 +2286,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['minOrderEnableSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/active');
+					
 
 
 
 					//Minimum Amount
-					$salesAcion['minAmountSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/amount');
 					if(isset($post_data['minAmountVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/minimum_order/amount', $post_data['minAmountVal'], 'default', 0);
@@ -2251,10 +2300,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['minAmountSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/amount');
+					
 
 
 					//Description Message
-					$salesAcion['descriptionMessSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/description', $storeId);
 					if(isset($post_data['descriptionMessVal']))
 					{
 						if($storeId == 0)
@@ -2270,10 +2320,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['descriptionMessSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/description', $storeId);
+					
 
 
 					//Error to Show in Shopping Cart
-					$salesAcion['errorMessSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/error_message', $storeId);
 					if(isset($post_data['errorMessVal']))
 					{
 						if($storeId == 0)
@@ -2289,10 +2340,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['errorMessSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/error_message', $storeId);
+					
 
 
 					//Validate Each Address Separately in Multi-address Checkout
-					$salesAcion['validateAddressSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address');
 					if(isset($post_data['validateAddressVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/minimum_order/multi_address', $post_data['validateAddressVal'], 'default', 0);
@@ -2301,10 +2353,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['validateAddressSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address');
+					
 
 
 					//Multi-address Description Message
-					$salesAcion['multiAddressSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address_description', $storeId);
 					if(isset($post_data['multiAddressVal']))
 					{
 						if($storeId == 0)
@@ -2320,10 +2373,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['multiAddressSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address_description', $storeId);
+					
 
 
 					//Multi-address Error to Show in Shopping Cart
-					$salesAcion['multiAddressErrorSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address_error_message', $storeId);
 					if(isset($post_data['multiAddressErrorVal']))
 					{
 						if($storeId == 0)
@@ -2339,6 +2393,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['multiAddressErrorSelectedValue'] = Mage::getStoreConfig('sales/minimum_order/multi_address_error_message', $storeId);
+					
 
 
 
@@ -2346,7 +2402,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Dashboard
 
 					//Use Aggregated Data (beta)
-					$salesAcion['useAggregatedSelectedValue'] = Mage::getStoreConfig('sales/dashboard/use_aggregated_data');
 					if(isset($post_data['useAggregatedVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/dashboard/use_aggregated_data', $post_data['useAggregatedVal'], 'default', 0);
@@ -2355,6 +2410,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['useAggregatedSelectedValue'] = Mage::getStoreConfig('sales/dashboard/use_aggregated_data');
+					
 
 
 
@@ -2362,7 +2419,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Gift Options
 
 					//Allow Gift Messages on Order Level
-					$salesAcion['allowGiftSelectedValue'] = Mage::getStoreConfig('sales/gift_options/allow_order');
 					if(isset($post_data['allowGiftVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/gift_options/allow_order', $post_data['allowGiftVal'], 'default', 0);
@@ -2371,10 +2427,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['allowGiftSelectedValue'] = Mage::getStoreConfig('sales/gift_options/allow_order');
+					
 
 
 					//Allow Gift Messages for Order Items
-					$salesAcion['allowGiftOrderSelectedValue'] = Mage::getStoreConfig('sales/gift_options/allow_items');
 					if(isset($post_data['allowGiftOrderVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/gift_options/allow_items', $post_data['allowGiftOrderVal'], 'default', 0);
@@ -2383,6 +2440,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['allowGiftOrderSelectedValue'] = Mage::getStoreConfig('sales/gift_options/allow_items');
+					
 
 
 
@@ -2390,7 +2449,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Minimum Advertised Price
 
 					//Enable MAP
-					$salesAcion['enableMapSelectedValue'] = Mage::getStoreConfig('sales/msrp/enabled');
 					if(isset($post_data['enableMapVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/msrp/enabled', $post_data['enableMapVal'], 'default', 0);
@@ -2399,10 +2457,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['enableMapSelectedValue'] = Mage::getStoreConfig('sales/msrp/enabled');
+					
 
 
 					//Apply MAP (Default Value)
-					$salesAcion['applyMapSelectedValue'] = Mage::getStoreConfig('sales/msrp/apply_for_all');
 					if(isset($post_data['applyMapVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/msrp/apply_for_all', $post_data['applyMapVal'], 'default', 0);
@@ -2411,10 +2470,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['applyMapSelectedValue'] = Mage::getStoreConfig('sales/msrp/apply_for_all');
+					
 
 
 					//Display Actual Price
-					$salesAcion['displayActualSelectedValue'] = Mage::getStoreConfig('sales/msrp/display_price_type');
 					if(isset($post_data['displayActualVal']))
 					{
 						Mage::getConfig()->saveConfig('sales/msrp/display_price_type', $post_data['displayActualVal'], 'default', 0);
@@ -2423,10 +2483,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['displayActualSelectedValue'] = Mage::getStoreConfig('sales/msrp/display_price_type');
+					
 
 
 					//Default Popup Text Message
-					$salesAcion['defaultPopUpSelectedValue'] = Mage::getStoreConfig('sales/msrp/explanation_message', $storeId);
 					if(isset($post_data['defaultPopUpVal']))
 					{
 						if($storeId == 0)
@@ -2442,10 +2503,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['defaultPopUpSelectedValue'] = Mage::getStoreConfig('sales/msrp/explanation_message', $storeId);
+					
 
 
 					//Default "What's This" Text Message
-					$salesAcion['defaultWhatsTextSelectedValue'] = Mage::getStoreConfig('sales/msrp/explanation_message_whats_this', $storeId);
 					if(isset($post_data['defaultWhatsTextVal']))
 					{
 						if($storeId == 0)
@@ -2461,6 +2523,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesAcion['defaultWhatsTextSelectedValue'] = Mage::getStoreConfig('sales/msrp/explanation_message_whats_this', $storeId);
+					
 
 				//echo "<pre>"; print_r($salesAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesAcion);
@@ -2507,7 +2571,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Order
 
 					//Enabled
-					$salesEmailsAcion['salesEmailEnableSelectedValue'] = Mage::getStoreConfig('sales_email/order/enabled', $storeId);
 					if(isset($post_data['salesEmailEnableVal']))
 					{
 						if($storeId == 0)
@@ -2523,9 +2586,27 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailEnableSelectedValue'] = Mage::getStoreConfig('sales_email/order/enabled', $storeId);
+					
 
 
 					//New Order Confirmation Email Sender
+					if(isset($post_data['newOrderConfirmationVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/order/identity', $post_data['newOrderConfirmationVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/order/identity', $post_data['newOrderConfirmationVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "New Order Confirmation Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$newOrderConfirmationSelectedValue = Mage::getStoreConfig('sales_email/order/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -2547,53 +2628,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['newOrderConfirmationVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/order/identity', $post_data['newOrderConfirmationVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/order/identity', $post_data['newOrderConfirmationVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "New Order Confirmation Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
-
 
 					//New Order Confirmation Template
-					$newOrderEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/order/template', $storeId);
-
-					$newOrderEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderEmailTemCollection = $newOrderEmailTemObj->toOptionArray();
-					if($newOrderEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderEmailTemCollection[0]['value'] = "sales_email_order_template";
-					}
-					//echo "<pre>"; print_r($newOrderEmailTemCollection); die;
-					foreach ($newOrderEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -2610,37 +2646,36 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$newOrderEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/order/template', $storeId);
 
-
-					//New Order Confirmation Template for Guest
-					$forGuestEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/order/guest_template', $storeId);
-
-					$newOrderEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderEmailGuestTemCollection = $newOrderEmailGuestTemObj->toOptionArray();
-					if($newOrderEmailGuestTemCollection[0]['value'] == "")
+					$newOrderEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderEmailTemCollection = $newOrderEmailTemObj->toOptionArray();
+					if($newOrderEmailTemCollection[0]['value'] == "")
 					{
-						$newOrderEmailGuestTemCollection[0]['value'] = "sales_email_order_guest_template";
+						$newOrderEmailTemCollection[0]['value'] = "sales_email_order_template";
 					}
-
-					//echo "<pre>"; print_r($emailTemCollection); die;
-					foreach ($newOrderEmailGuestTemCollection as $value)
+					//echo "<pre>"; print_r($newOrderEmailTemCollection); die;
+					foreach ($newOrderEmailTemCollection as $value)
 					{
-						if($value['value'] == $forGuestEmailTemplateSelectedValue)
+						if($value['value'] == $newOrderEmailTemplateSelectedValue)
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "New Order (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 						else
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "New Order (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 					}
 					//echo $post_data['emailTemplateVal']."***";
+
+
+					//New Order Confirmation Template for Guest
 					if(isset($post_data['newOrderForGuestVal']))
 					{
 						if($storeId == 0)
@@ -2657,10 +2692,37 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$forGuestEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/order/guest_template', $storeId);
 
+					$newOrderEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderEmailGuestTemCollection = $newOrderEmailGuestTemObj->toOptionArray();
+					if($newOrderEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderEmailGuestTemCollection[0]['value'] = "sales_email_order_guest_template";
+					}
+
+					//echo "<pre>"; print_r($emailTemCollection); die;
+					foreach ($newOrderEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Order for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Order for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 					//Send Order Email Copy To
-					$salesEmailsAcion['emailCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/order/copy_to', $storeId);
 					if(isset($post_data['emailCopyToVal']))
 					{
 						if($storeId == 0)
@@ -2676,10 +2738,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/order/copy_to', $storeId);
+					
 
 
 					//Send Order Email Copy Method
-					$salesEmailsAcion['orderEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/order/copy_method', $storeId);
 					if(isset($post_data['orderEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -2695,6 +2758,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/order/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -2737,7 +2802,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Order Comments
 
 					//Enabled
-					$salesEmailsAcion['salesEmailCommentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/enabled', $storeId);
 					if(isset($post_data['salesEmailCommentEnableVal']))
 					{
 						if($storeId == 0)
@@ -2753,9 +2817,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailCommentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/enabled', $storeId);
+					
 
 
 					//Order Comment Email Sender
+					if(isset($post_data['newOrderConfirmationCommentVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/order_comment/identity', $post_data['newOrderConfirmationCommentVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/order_comment/identity', $post_data['newOrderConfirmationCommentVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Order Comment Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$newOrderConfirmationSelectedValue = Mage::getStoreConfig('sales_email/order_comment/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -2777,53 +2858,9 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['newOrderConfirmationCommentVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/order_comment/identity', $post_data['newOrderConfirmationCommentVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/order_comment/identity', $post_data['newOrderConfirmationCommentVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Order Comment Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
-
+					
 
 					//Order Comment Email Template
-					$newOrderEmailTemplateCommentSelectedValue = Mage::getStoreConfig('sales_email/order_comment/template', $storeId);
-
-					$newOrderEmailCommentTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderEmailTemCommentCollection = $newOrderEmailCommentTemObj->toOptionArray();
-					if($newOrderEmailTemCommentCollection[0]['value'] == "")
-					{
-						$newOrderEmailTemCommentCollection[0]['value'] = "sales_email_order_comment_template";
-					}
-					//echo "<pre>"; print_r($newOrderEmailTemCommentCollection); die;
-					foreach ($newOrderEmailTemCommentCollection as $value)
-					{
-						if($value['value'] == $newOrderEmailTemplateCommentSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderEmailTempCommentColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderEmailTempCommentColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderEmailCommentTemplateVal']))
 					{
 						if($storeId == 0)
@@ -2840,37 +2877,37 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$newOrderEmailTemplateCommentSelectedValue = Mage::getStoreConfig('sales_email/order_comment/template', $storeId);
 
-
-					//Order Comment Email Template for Guest
-					$forGuestEmailTemplateCommentSelectedValue = Mage::getStoreConfig('sales_email/order_comment/guest_template', $storeId);
-
-					$newOrderEmailGuestCommentTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderEmailGuestTemCommentCollection = $newOrderEmailGuestCommentTemObj->toOptionArray();
-					if($newOrderEmailGuestTemCommentCollection[0]['value'] == "")
+					$newOrderEmailCommentTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderEmailTemCommentCollection = $newOrderEmailCommentTemObj->toOptionArray();
+					if($newOrderEmailTemCommentCollection[0]['value'] == "")
 					{
-						$newOrderEmailGuestTemCommentCollection[0]['value'] = "sales_email_order_comment_guest_template";
+						$newOrderEmailTemCommentCollection[0]['value'] = "sales_email_order_comment_template";
 					}
-
-					//echo "<pre>"; print_r($emailTemCollection); die;
-					foreach ($newOrderEmailGuestTemCommentCollection as $value)
+					//echo "<pre>"; print_r($newOrderEmailTemCommentCollection); die;
+					foreach ($newOrderEmailTemCommentCollection as $value)
 					{
-						if($value['value'] == $forGuestEmailTemplateCommentSelectedValue)
+						if($value['value'] == $newOrderEmailTemplateCommentSelectedValue)
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderForGuestCommentColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "Order Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderEmailTempCommentColl'][] = $newOrderEmailTemArr;
 						}
 						else
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderForGuestCommentColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "Order Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderEmailTempCommentColl'][] = $newOrderEmailTemArr;
 						}
 					}
 					//echo $post_data['emailTemplateVal']."***";
+					
+
+
+					//Order Comment Email Template for Guest
 					if(isset($post_data['newOrderForGuestCommentVal']))
 					{
 						if($storeId == 0)
@@ -2886,11 +2923,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$forGuestEmailTemplateCommentSelectedValue = Mage::getStoreConfig('sales_email/order_comment/guest_template', $storeId);
+
+					$newOrderEmailGuestCommentTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderEmailGuestTemCommentCollection = $newOrderEmailGuestCommentTemObj->toOptionArray();
+					if($newOrderEmailGuestTemCommentCollection[0]['value'] == "")
+					{
+						$newOrderEmailGuestTemCommentCollection[0]['value'] = "sales_email_order_comment_guest_template";
+					}
+
+					//echo "<pre>"; print_r($emailTemCollection); die;
+					foreach ($newOrderEmailGuestTemCommentCollection as $value)
+					{
+						if($value['value'] == $forGuestEmailTemplateCommentSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "Order Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderForGuestCommentColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "Order Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderForGuestCommentColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Send Order Comment Email Copy To
-					$salesEmailsAcion['emailCopyCommentToSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/copy_to', $storeId);
 					if(isset($post_data['emailCopyToCommentVal']))
 					{
 						if($storeId == 0)
@@ -2906,10 +2971,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailCopyCommentToSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/copy_to', $storeId);
+					
 
 
 					//Send Order Comments Email Copy Method
-					$salesEmailsAcion['orderEmailCopyCommentSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/copy_method', $storeId);
 					if(isset($post_data['orderEmailCopyCommentVal']))
 					{
 						if($storeId == 0)
@@ -2925,6 +2991,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderEmailCopyCommentSelectedValue'] = Mage::getStoreConfig('sales_email/order_comment/copy_method', $storeId);
+					
 
 				//echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -2967,7 +3035,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Invoice
 
 					//Enabled
-					$salesEmailsAcion['salesEmailInvoiceEnableSelectedValue'] = Mage::getStoreConfig('sales_email/invoice/enabled', $storeId);
 					if(isset($post_data['salesEmailInvoiceEnableVal']))
 					{
 						if($storeId == 0)
@@ -2983,9 +3050,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailInvoiceEnableSelectedValue'] = Mage::getStoreConfig('sales_email/invoice/enabled', $storeId);
+					
 
 
 					//Invoice Email Sender
+					if(isset($post_data['invoiceEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/invoice/identity', $post_data['invoiceEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/invoice/identity', $post_data['invoiceEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Invoice Email updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$invoiceEmailSelectedValue = Mage::getStoreConfig('sales_email/invoice/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -3007,53 +3091,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['invoiceEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/invoice/identity', $post_data['invoiceEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/invoice/identity', $post_data['invoiceEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Invoice Email updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
+					
 
 
 					//Invoice Email Template
-					$newOrderInvoiceEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice/template', $storeId);
-
-					$newOrderInvoiceEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderInvoiceEmailTemCollection = $newOrderInvoiceEmailTemObj->toOptionArray();
-					if($newOrderInvoiceEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderInvoiceEmailTemCollection[0]['value'] = "sales_email_invoice_template";
-					}
-					//echo "<pre>"; print_r($newOrderInvoiceEmailTemCollection); die;
-					foreach ($newOrderInvoiceEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderInvoiceEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderInvoiceEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderInvoiceEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderInvoiceEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -3069,38 +3110,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$newOrderInvoiceEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice/template', $storeId);
+
+					$newOrderInvoiceEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderInvoiceEmailTemCollection = $newOrderInvoiceEmailTemObj->toOptionArray();
+					if($newOrderInvoiceEmailTemCollection[0]['value'] == "")
+					{
+						$newOrderInvoiceEmailTemCollection[0]['value'] = "sales_email_invoice_template";
+					}
+					//echo "<pre>"; print_r($newOrderInvoiceEmailTemCollection); die;
+					foreach ($newOrderInvoiceEmailTemCollection as $value)
+					{
+						if($value['value'] == $newOrderInvoiceEmailTemplateSelectedValue)
+						{
+							$newOrderEmailTemArr['label'] = "New Invoice (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderInvoiceEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+						else
+						{
+							$newOrderEmailTemArr['label'] = "New Invoice (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderInvoiceEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Invoice Email Template for Guest
-					$forGuestInvoiceEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice/guest_template', $storeId);
-
-					$newOrderInvoiceEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderInvoiceEmailGuestTemCollection = $newOrderInvoiceEmailGuestTemObj->toOptionArray();
-					if($newOrderInvoiceEmailGuestTemCollection[0]['value'] == "")
-					{
-						$newOrderInvoiceEmailGuestTemCollection[0]['value'] = "sales_email_invoice_guest_template";
-					}
-
-					//echo "<pre>"; print_r($emailTemCollection); die;
-					foreach ($newOrderInvoiceEmailGuestTemCollection as $value)
-					{
-						if($value['value'] == $forGuestInvoiceEmailTemplateSelectedValue)
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderInvoiceForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-						else
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderInvoiceForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderInvoiceForGuestVal']))
 					{
 						if($storeId == 0)
@@ -3116,11 +3157,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$forGuestInvoiceEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice/guest_template', $storeId);
+
+					$newOrderInvoiceEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderInvoiceEmailGuestTemCollection = $newOrderInvoiceEmailGuestTemObj->toOptionArray();
+					if($newOrderInvoiceEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderInvoiceEmailGuestTemCollection[0]['value'] = "sales_email_invoice_guest_template";
+					}
+
+					//echo "<pre>"; print_r($emailTemCollection); die;
+					foreach ($newOrderInvoiceEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestInvoiceEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Invoice for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderInvoiceForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Invoice for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderInvoiceForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Send Invoice Email Copy To
-					$salesEmailsAcion['emailInvoiceCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/invoice/copy_to', $storeId);
 					if(isset($post_data['emailInvoiceCopyToVal']))
 					{
 						if($storeId == 0)
@@ -3136,10 +3205,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailInvoiceCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/invoice/copy_to', $storeId);
+					
 
 
 					//Send Invoice Email Copy Method
-					$salesEmailsAcion['orderInvoiceEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/invoice/copy_method', $storeId);
 					if(isset($post_data['orderInvoiceEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -3155,6 +3225,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderInvoiceEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/invoice/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -3197,7 +3269,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Invoice Comments
 
 					//Enabled
-					$salesEmailsAcion['salesEmailInvoiceCommentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/enabled', $storeId);
 					if(isset($post_data['salesEmailInvoiceCommentEnableVal']))
 					{
 						if($storeId == 0)
@@ -3213,9 +3284,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailInvoiceCommentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/enabled', $storeId);
+					
 
 
 					//Invoice Comment Email Sender
+					if(isset($post_data['invoiceCommentEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/invoice_comment/identity', $post_data['invoiceCommentEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/invoice_comment/identity', $post_data['invoiceCommentEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Invoice Comment Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$invoiceCommentEmailSelectedValue = Mage::getStoreConfig('sales_email/invoice_comment/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -3237,53 +3325,9 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['invoiceCommentEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/invoice_comment/identity', $post_data['invoiceCommentEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/invoice_comment/identity', $post_data['invoiceCommentEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Invoice Comment Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
-
+					
 
 					//Invoice Comment Email Template
-					$newOrderInvoiceCommentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice_comment/template', $storeId);
-
-					$newOrderInvoiceCommentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderInvoiceCommentEmailTemCollection = $newOrderInvoiceCommentEmailTemObj->toOptionArray();
-					if($newOrderInvoiceCommentEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderInvoiceCommentEmailTemCollection[0]['value'] = "sales_email_invoice_comment_template";
-					}
-					//echo "<pre>"; print_r($newOrderInvoiceCommentEmailTemCollection); die;
-					foreach ($newOrderInvoiceCommentEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderInvoiceCommentEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderInvoiceCommentEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderInvoiceCommentEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderInvoiceCommentEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -3299,38 +3343,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$newOrderInvoiceCommentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice_comment/template', $storeId);
+
+					$newOrderInvoiceCommentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderInvoiceCommentEmailTemCollection = $newOrderInvoiceCommentEmailTemObj->toOptionArray();
+					if($newOrderInvoiceCommentEmailTemCollection[0]['value'] == "")
+					{
+						$newOrderInvoiceCommentEmailTemCollection[0]['value'] = "sales_email_invoice_comment_template";
+					}
+					//echo "<pre>"; print_r($newOrderInvoiceCommentEmailTemCollection); die;
+					foreach ($newOrderInvoiceCommentEmailTemCollection as $value)
+					{
+						if($value['value'] == $newOrderInvoiceCommentEmailTemplateSelectedValue)
+						{
+							$newOrderEmailTemArr['label'] = "Invoice Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderInvoiceCommentEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+						else
+						{
+							$newOrderEmailTemArr['label'] = "Invoice Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderInvoiceCommentEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Invoice Comment Email Template for Guest
-					$forGuestInvoiceCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice_comment/guest_template', $storeId);
-
-					$newOrderInvoiceCommentEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderInvoiceCommentsEmailGuestTemCollection = $newOrderInvoiceCommentEmailGuestTemObj->toOptionArray();
-					if($newOrderInvoiceCommentsEmailGuestTemCollection[0]['value'] == "")
-					{
-						$newOrderInvoiceCommentsEmailGuestTemCollection[0]['value'] = "sales_email_invoice_comment_guest_template";
-					}
-
-					//echo "<pre>"; print_r($emailTemCollection); die;
-					foreach ($newOrderInvoiceCommentsEmailGuestTemCollection as $value)
-					{
-						if($value['value'] == $forGuestInvoiceCommentsEmailTemplateSelectedValue)
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderInvoiceCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-						else
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderInvoiceCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderInvoiceCommentsForGuestVal']))
 					{
 						if($storeId == 0)
@@ -3346,11 +3390,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$forGuestInvoiceCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/invoice_comment/guest_template', $storeId);
+
+					$newOrderInvoiceCommentEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderInvoiceCommentsEmailGuestTemCollection = $newOrderInvoiceCommentEmailGuestTemObj->toOptionArray();
+					if($newOrderInvoiceCommentsEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderInvoiceCommentsEmailGuestTemCollection[0]['value'] = "sales_email_invoice_comment_guest_template";
+					}
+
+					//echo "<pre>"; print_r($emailTemCollection); die;
+					foreach ($newOrderInvoiceCommentsEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestInvoiceCommentsEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "Invoice Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderInvoiceCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "Invoice Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderInvoiceCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Send Invoice Comment Email Copy To
-					$salesEmailsAcion['emailInvoiceCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/copy_to', $storeId);
 					if(isset($post_data['emailInvoiceCommentCopyToVal']))
 					{
 						if($storeId == 0)
@@ -3366,10 +3438,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailInvoiceCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/copy_to', $storeId);
+					
 
 
 					//Send Invoice Comments Email Copy Method
-					$salesEmailsAcion['orderInvoiceCommentEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/copy_method', $storeId);
 					if(isset($post_data['orderInvoiceCommentEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -3385,6 +3458,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderInvoiceCommentEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/invoice_comment/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -3427,7 +3502,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Shipment
 
 					//Enabled
-					$salesEmailsAcion['salesEmailShipmentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/shipment/enabled', $storeId);
 					if(isset($post_data['salesEmailShipmentEnableVal']))
 					{
 						if($storeId == 0)
@@ -3443,9 +3517,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailShipmentEnableSelectedValue'] = Mage::getStoreConfig('sales_email/shipment/enabled', $storeId);
+					
 
 
 					//Shipment Email Sender
+					if(isset($post_data['shipmentEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/shipment/identity', $post_data['shipmentEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/shipment/identity', $post_data['shipmentEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Shipment Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$shipmentEmailSelectedValue = Mage::getStoreConfig('sales_email/shipment/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -3467,53 +3558,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['shipmentEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/shipment/identity', $post_data['shipmentEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/shipment/identity', $post_data['shipmentEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Shipment Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
+					
 
 
 					//Shipment Email Template
-					$newOrderShipmentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment/template', $storeId);
-
-					$newOrderShipmentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderShipmentEmailTemCollection = $newOrderShipmentEmailTemObj->toOptionArray();
-					if($newOrderShipmentEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderShipmentEmailTemCollection[0]['value'] = "sales_email_shipment_template";
-					}
-					//echo "<pre>"; print_r($newOrderShipmentEmailTemCollection); die;
-					foreach ($newOrderShipmentEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderShipmentEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderShipmentEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderShipmentEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderShipmentEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -3529,38 +3577,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$newOrderShipmentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment/template', $storeId);
+
+					$newOrderShipmentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderShipmentEmailTemCollection = $newOrderShipmentEmailTemObj->toOptionArray();
+					if($newOrderShipmentEmailTemCollection[0]['value'] == "")
+					{
+						$newOrderShipmentEmailTemCollection[0]['value'] = "sales_email_shipment_template";
+					}
+					//echo "<pre>"; print_r($newOrderShipmentEmailTemCollection); die;
+					foreach ($newOrderShipmentEmailTemCollection as $value)
+					{
+						if($value['value'] == $newOrderShipmentEmailTemplateSelectedValue)
+						{
+							$newOrderEmailTemArr['label'] = "New Shipment (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderShipmentEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+						else
+						{
+							$newOrderEmailTemArr['label'] = "New Shipment (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderShipmentEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Shipment Email Template for Guest
-					$forGuestShipmentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment/guest_template', $storeId);
-
-					$newOrderShipmentEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderShipmentEmailGuestTemCollection = $newOrderShipmentEmailGuestTemObj->toOptionArray();
-					if($newOrderShipmentEmailGuestTemCollection[0]['value'] == "")
-					{
-						$newOrderShipmentEmailGuestTemCollection[0]['value'] = "sales_email_shipment_guest_template";
-					}
-
-					//echo "<pre>"; print_r($emailTemCollection); die;
-					foreach ($newOrderShipmentEmailGuestTemCollection as $value)
-					{
-						if($value['value'] == $forGuestShipmentEmailTemplateSelectedValue)
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderShipmentForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-						else
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderShipmentForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderShipmentForGuestVal']))
 					{
 						if($storeId == 0)
@@ -3576,11 +3624,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$forGuestShipmentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment/guest_template', $storeId);
+
+					$newOrderShipmentEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderShipmentEmailGuestTemCollection = $newOrderShipmentEmailGuestTemObj->toOptionArray();
+					if($newOrderShipmentEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderShipmentEmailGuestTemCollection[0]['value'] = "sales_email_shipment_guest_template";
+					}
+
+					//echo "<pre>"; print_r($emailTemCollection); die;
+					foreach ($newOrderShipmentEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestShipmentEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Shipment for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderShipmentForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Shipment for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderShipmentForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Send Shipment Email Copy To
-					$salesEmailsAcion['emailShipmentCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/shipment/copy_to', $storeId);
 					if(isset($post_data['emailShipmentCopyToVal']))
 					{
 						if($storeId == 0)
@@ -3596,10 +3672,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailShipmentCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/shipment/copy_to', $storeId);
+					
 
 
 					//Send Shipment Email Copy Method
-					$salesEmailsAcion['orderShipmentEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/shipment/copy_method', $storeId);
 					if(isset($post_data['orderShipmentEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -3615,6 +3692,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderShipmentEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/shipment/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -3657,7 +3736,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Shipment Comments
 
 					//Enabled
-					$salesEmailsAcion['salesEmailShipmentCommentsEnableSelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/enabled', $storeId);
 					if(isset($post_data['salesEmailShipmentCommentsEnableVal']))
 					{
 						if($storeId == 0)
@@ -3673,9 +3751,26 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailShipmentCommentsEnableSelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/enabled', $storeId);
+					
 
 
 					//Shipment Comment Email Sender
+					if(isset($post_data['shipmentCommentsEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/shipment_comment/identity', $post_data['shipmentCommentsEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/shipment_comment/identity', $post_data['shipmentCommentsEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Shipment Comment Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
 					$shipmentCommentsEmailSelectedValue = Mage::getStoreConfig('sales_email/shipment_comment/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -3697,53 +3792,9 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['shipmentCommentsEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/shipment_comment/identity', $post_data['shipmentCommentsEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/shipment_comment/identity', $post_data['shipmentCommentsEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Shipment Comment Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
-
+					
 
 					//Shipment Comment Email Template
-					$newOrderShipmentCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment_comment/template', $storeId);
-
-					$newOrderShipmentCommentsEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderShipmentCommentsEmailTemCollection = $newOrderShipmentCommentsEmailTemObj->toOptionArray();
-					if($newOrderShipmentCommentsEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderShipmentCommentsEmailTemCollection[0]['value'] = "sales_email_shipment_comment_template";
-					}
-					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailTemCollection); die;
-					foreach ($newOrderShipmentCommentsEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderShipmentCommentsEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderShipmentCommentsEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderShipmentCommentsEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderShipmentCommentsEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -3759,38 +3810,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$newOrderShipmentCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment_comment/template', $storeId);
+
+					$newOrderShipmentCommentsEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderShipmentCommentsEmailTemCollection = $newOrderShipmentCommentsEmailTemObj->toOptionArray();
+					if($newOrderShipmentCommentsEmailTemCollection[0]['value'] == "")
+					{
+						$newOrderShipmentCommentsEmailTemCollection[0]['value'] = "sales_email_shipment_comment_template";
+					}
+					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailTemCollection); die;
+					foreach ($newOrderShipmentCommentsEmailTemCollection as $value)
+					{
+						if($value['value'] == $newOrderShipmentCommentsEmailTemplateSelectedValue)
+						{
+							$newOrderEmailTemArr['label'] = "Shipment Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderShipmentCommentsEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+						else
+						{
+							$newOrderEmailTemArr['label'] = "Shipment Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderShipmentCommentsEmailTempColl'][] = $newOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
 
 
 
 					//Shipment Comment Email Template for Guest
-					$forGuestShipmentCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment_comment/guest_template', $storeId);
-
-					$newOrderShipmentCommentsEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderShipmentCommentsEmailGuestTemCollection = $newOrderShipmentCommentsEmailGuestTemObj->toOptionArray();
-					if($newOrderShipmentCommentsEmailGuestTemCollection[0]['value'] == "")
-					{
-						$newOrderShipmentCommentsEmailGuestTemCollection[0]['value'] = "sales_email_shipment_comment_guest_template";
-					}
-
-					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailGuestTemCollection); die;
-					foreach ($newOrderShipmentCommentsEmailGuestTemCollection as $value)
-					{
-						if($value['value'] == $forGuestShipmentCommentsEmailTemplateSelectedValue)
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderShipmentCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-						else
-						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderShipmentCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderShipmentCommentsForGuestVal']))
 					{
 						if($storeId == 0)
@@ -3807,10 +3858,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$forGuestShipmentCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/shipment_comment/guest_template', $storeId);
+
+					$newOrderShipmentCommentsEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderShipmentCommentsEmailGuestTemCollection = $newOrderShipmentCommentsEmailGuestTemObj->toOptionArray();
+					if($newOrderShipmentCommentsEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderShipmentCommentsEmailGuestTemCollection[0]['value'] = "sales_email_shipment_comment_guest_template";
+					}
+
+					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailGuestTemCollection); die;
+					foreach ($newOrderShipmentCommentsEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestShipmentCommentsEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "Shipment Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderShipmentCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "Shipment Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderShipmentCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
+
 
 
 					//Send Shipment Comment Email Copy To
-					$salesEmailsAcion['emailShipmentCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/copy_to', $storeId);
 					if(isset($post_data['emailShipmentCommentsCopyToVal']))
 					{
 						if($storeId == 0)
@@ -3826,10 +3906,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailShipmentCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/copy_to', $storeId);
+					
 
 
 					//Send Shipment Comments Email Copy Method
-					$salesEmailsAcion['orderShipmentCommentsEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/copy_method', $storeId);
 					if(isset($post_data['orderShipmentCommentsEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -3845,6 +3926,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderShipmentCommentsEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/shipment_comment/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -3887,7 +3970,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Credit Memo
 
 					//Enabled
-					$salesEmailsAcion['salesEmailCreditMemoEnableSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/enabled', $storeId);
 					if(isset($post_data['salesEmailCreditMemoEnableVal']))
 					{
 						if($storeId == 0)
@@ -3903,9 +3985,27 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailCreditMemoEnableSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/enabled', $storeId);
+					
 
 
 					//Credit Memo Email Sender
+					if(isset($post_data['creditMemoEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/creditmemo/identity', $post_data['creditMemoEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/creditmemo/identity', $post_data['creditMemoEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Credit Memo Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$creditMemoEmailSelectedValue = Mage::getStoreConfig('sales_email/creditmemo/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -3927,53 +4027,9 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['creditMemoEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/creditmemo/identity', $post_data['creditMemoEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/creditmemo/identity', $post_data['creditMemoEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Credit Memo Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
-
+					
 
 					//Credit Memo Email Template
-					$newOrderCreditMemoEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo/template', $storeId);
-
-					$newOrderCreditMemoEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderCreditMemoEmailTemCollection = $newOrderCreditMemoEmailTemObj->toOptionArray();
-					if($newOrderCreditMemoEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderCreditMemoEmailTemCollection[0]['value'] = "sales_email_creditmemo_template";
-					}
-					//echo "<pre>"; print_r($newOrderCreditMemoEmailTemCollection); die;
-					foreach ($newOrderCreditMemoEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderCreditMemoEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderCreditMemoEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderCreditMemoEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderCreditMemoEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -3990,37 +4046,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$newOrderCreditMemoEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo/template', $storeId);
 
-
-					//Credit Memo Email Template for Guest
-					$forGuestCreditMemoEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo/guest_template', $storeId);
-
-					$newOrderCreditMemoEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderCreditMemoEmailGuestTemCollection = $newOrderCreditMemoEmailGuestTemObj->toOptionArray();
-					if($newOrderCreditMemoEmailGuestTemCollection[0]['value'] == "")
+					$newOrderCreditMemoEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderCreditMemoEmailTemCollection = $newOrderCreditMemoEmailTemObj->toOptionArray();
+					if($newOrderCreditMemoEmailTemCollection[0]['value'] == "")
 					{
-						$newOrderCreditMemoEmailGuestTemCollection[0]['value'] = "sales_email_creditmemo_guest_template";
+						$newOrderCreditMemoEmailTemCollection[0]['value'] = "sales_email_creditmemo_template";
 					}
-
-					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailGuestTemCollection); die;
-					foreach ($newOrderCreditMemoEmailGuestTemCollection as $value)
+					//echo "<pre>"; print_r($newOrderCreditMemoEmailTemCollection); die;
+					foreach ($newOrderCreditMemoEmailTemCollection as $value)
 					{
-						if($value['value'] == $forGuestCreditMemoEmailTemplateSelectedValue)
+						if($value['value'] == $newOrderCreditMemoEmailTemplateSelectedValue)
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderCreditMemoForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "New Credit Memo (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderCreditMemoEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 						else
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderCreditMemoForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "New Credit Memo (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderCreditMemoEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 					}
 					//echo $post_data['emailTemplateVal']."***";
+					
+
+
+
+					//Credit Memo Email Template for Guest
 					if(isset($post_data['newOrderCreditMemoForGuestVal']))
 					{
 						if($storeId == 0)
@@ -4037,10 +4094,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$forGuestCreditMemoEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo/guest_template', $storeId);
+
+					$newOrderCreditMemoEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderCreditMemoEmailGuestTemCollection = $newOrderCreditMemoEmailGuestTemObj->toOptionArray();
+					if($newOrderCreditMemoEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderCreditMemoEmailGuestTemCollection[0]['value'] = "sales_email_creditmemo_guest_template";
+					}
+
+					//echo "<pre>"; print_r($newOrderShipmentCommentsEmailGuestTemCollection); die;
+					foreach ($newOrderCreditMemoEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestCreditMemoEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Credit Memo for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderCreditMemoForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "New Credit Memo for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderCreditMemoForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
+
 
 
 					//Send Credit Memo Email Copy To
-					$salesEmailsAcion['emailCreditMemoCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/copy_to', $storeId);
 					if(isset($post_data['emailCreditMemoCopyToVal']))
 					{
 						if($storeId == 0)
@@ -4056,10 +4142,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['emailCreditMemoCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/copy_to', $storeId);
+					
 
 
 					//Send Credit Memo Email Copy Method
-					$salesEmailsAcion['orderCreditMemoEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/copy_method', $storeId);
 					if(isset($post_data['orderCreditMemoEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -4075,6 +4162,8 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['orderCreditMemoEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -4117,7 +4206,6 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Credit Memo Comments
 
 					//Enabled
-					$salesEmailsAcion['salesEmailCreditMemoCommentsEnableSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/enabled', $storeId);
 					if(isset($post_data['salesEmailCreditMemoCommentsEnableVal']))
 					{
 						if($storeId == 0)
@@ -4133,9 +4221,27 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+					$salesEmailsAcion['salesEmailCreditMemoCommentsEnableSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/enabled', $storeId);
+					
 
 
 					//Credit Memo Comment Email Sender
+					if(isset($post_data['creditMemoCommentEmailVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('sales_email/creditmemo_comment/identity', $post_data['creditMemoCommentEmailVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('sales_email/creditmemo_comment/identity', $post_data['creditMemoCommentEmailVal'], 'stores', $storeId);
+						}
+						
+						$salesEmailsAcion['successMessage'] = "Credit Memo Comment Email Sender updated On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$creditMemoCommentEmailSelectedValue = Mage::getStoreConfig('sales_email/creditmemo_comment/identity', $storeId);
 
 					foreach ($this->emailSendersListArray() as $value)
@@ -4157,53 +4263,10 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						
 					}
 
-					if(isset($post_data['creditMemoCommentEmailVal']))
-					{
-						if($storeId == 0)
-						{
-							Mage::getConfig()->saveConfig('sales_email/creditmemo_comment/identity', $post_data['creditMemoCommentEmailVal'], 'default', $storeId);
-						}
-						else
-						{
-							Mage::getConfig()->saveConfig('sales_email/creditmemo_comment/identity', $post_data['creditMemoCommentEmailVal'], 'stores', $storeId);
-						}
-						
-						$salesEmailsAcion['successMessage'] = "Credit Memo Comment Email Sender updated On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-
-
+					
 
 
 					//Credit Memo Comment Email Template
-					$newOrderCreditMemoCommentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo_comment/template', $storeId);
-
-					$newOrderCreditMemoCommentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderCreditMemoCommentEmailTemCollection = $newOrderCreditMemoCommentEmailTemObj->toOptionArray();
-					if($newOrderCreditMemoCommentEmailTemCollection[0]['value'] == "")
-					{
-						$newOrderCreditMemoCommentEmailTemCollection[0]['value'] = "sales_email_creditmemo_comment_template";
-					}
-					//echo "<pre>"; print_r($newOrderCreditMemoCommentEmailTemCollection); die;
-					foreach ($newOrderCreditMemoCommentEmailTemCollection as $value)
-					{
-						if($value['value'] == $newOrderCreditMemoCommentEmailTemplateSelectedValue)
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderCreditMemoCommentsEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-						else
-						{
-							$newOrderEmailTemArr['label'] = $value['label'];
-							$newOrderEmailTemArr['value'] = $value['value'];
-							$newOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderCreditMemoCommentsEmailTempColl'][] = $newOrderEmailTemArr;
-						}
-					}
-					//echo $post_data['emailTemplateVal']."***";
 					if(isset($post_data['newOrderCreditMemoCommentsEmailTemplateVal']))
 					{
 						if($storeId == 0)
@@ -4220,37 +4283,38 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$newOrderCreditMemoCommentEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo_comment/template', $storeId);
 
-
-					//Credit Memo Comment Email Template for Guest
-					$forGuestCreditMemoCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo_comment/guest_template', $storeId);
-
-					$newOrderCreditMemoCommentsEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
-					$newOrderCreditMemoCommentsEmailGuestTemCollection = $newOrderCreditMemoCommentsEmailGuestTemObj->toOptionArray();
-					if($newOrderCreditMemoCommentsEmailGuestTemCollection[0]['value'] == "")
+					$newOrderCreditMemoCommentEmailTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderCreditMemoCommentEmailTemCollection = $newOrderCreditMemoCommentEmailTemObj->toOptionArray();
+					if($newOrderCreditMemoCommentEmailTemCollection[0]['value'] == "")
 					{
-						$newOrderCreditMemoCommentsEmailGuestTemCollection[0]['value'] = "sales_email_creditmemo_comment_guest_template";
+						$newOrderCreditMemoCommentEmailTemCollection[0]['value'] = "sales_email_creditmemo_comment_template";
 					}
-
-					//echo "<pre>"; print_r($newOrderCreditMemoCommentsEmailGuestTemCollection); die;
-					foreach ($newOrderCreditMemoCommentsEmailGuestTemCollection as $value)
+					//echo "<pre>"; print_r($newOrderCreditMemoCommentEmailTemCollection); die;
+					foreach ($newOrderCreditMemoCommentEmailTemCollection as $value)
 					{
-						if($value['value'] == $forGuestCreditMemoCommentsEmailTemplateSelectedValue)
+						if($value['value'] == $newOrderCreditMemoCommentEmailTemplateSelectedValue)
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 1;
-							$salesEmailsAcion['newOrderCreditMemoCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "Credit Memo Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderCreditMemoCommentsEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 						else
 						{
-							$forGuestOrderEmailTemArr['label'] = $value['label'];
-							$forGuestOrderEmailTemArr['value'] = $value['value'];
-							$forGuestOrderEmailTemArr['status'] = 0;
-							$salesEmailsAcion['newOrderCreditMemoCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+							$newOrderEmailTemArr['label'] = "Credit Memo Update (".$value['label'].")";
+							$newOrderEmailTemArr['value'] = $value['value'];
+							$newOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderCreditMemoCommentsEmailTempColl'][] = $newOrderEmailTemArr;
 						}
 					}
 					//echo $post_data['emailTemplateVal']."***";
+					
+
+
+
+					//Credit Memo Comment Email Template for Guest
 					if(isset($post_data['newOrderCreditMemoCommentsForGuestVal']))
 					{
 						if($storeId == 0)
@@ -4267,10 +4331,39 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$forGuestCreditMemoCommentsEmailTemplateSelectedValue = Mage::getStoreConfig('sales_email/creditmemo_comment/guest_template', $storeId);
+
+					$newOrderCreditMemoCommentsEmailGuestTemObj = new Mage_Adminhtml_Model_System_Config_Source_Email_Template();
+					$newOrderCreditMemoCommentsEmailGuestTemCollection = $newOrderCreditMemoCommentsEmailGuestTemObj->toOptionArray();
+					if($newOrderCreditMemoCommentsEmailGuestTemCollection[0]['value'] == "")
+					{
+						$newOrderCreditMemoCommentsEmailGuestTemCollection[0]['value'] = "sales_email_creditmemo_comment_guest_template";
+					}
+
+					//echo "<pre>"; print_r($newOrderCreditMemoCommentsEmailGuestTemCollection); die;
+					foreach ($newOrderCreditMemoCommentsEmailGuestTemCollection as $value)
+					{
+						if($value['value'] == $forGuestCreditMemoCommentsEmailTemplateSelectedValue)
+						{
+							$forGuestOrderEmailTemArr['label'] = "Credit Memo Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 1;
+							$salesEmailsAcion['newOrderCreditMemoCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+						else
+						{
+							$forGuestOrderEmailTemArr['label'] = "Credit Memo Update for Guest (".$value['label'].")";
+							$forGuestOrderEmailTemArr['value'] = $value['value'];
+							$forGuestOrderEmailTemArr['status'] = 0;
+							$salesEmailsAcion['newOrderCreditMemoCommentsForGuestColl'][] = $forGuestOrderEmailTemArr;
+						}
+					}
+					//echo $post_data['emailTemplateVal']."***";
+					
+
 
 
 					//Send Credit Memo Comment Email Copy To
-					$salesEmailsAcion['emailCreditMemoCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/copy_to', $storeId);
 					if(isset($post_data['emailCreditMemoCommentsCopyToVal']))
 					{
 						if($storeId == 0)
@@ -4287,9 +4380,11 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$salesEmailsAcion['emailCreditMemoCommentsCopyToSelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/copy_to', $storeId);
+					
+
 
 					//Send Credit Memo Comments Email Copy Method
-					$salesEmailsAcion['orderCreditMemoCommentsEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/copy_method', $storeId);
 					if(isset($post_data['orderCreditMemoCommentsEmailCopyVal']))
 					{
 						if($storeId == 0)
@@ -4305,6 +4400,9 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::getConfig()->reinit();
 						Mage::app()->reinitStores();
 					}
+
+					$salesEmailsAcion['orderCreditMemoCommentsEmailCopySelectedValue'] = Mage::getStoreConfig('sales_email/creditmemo_comment/copy_method', $storeId);
+					
 
 				// echo "<pre>"; print_r($salesEmailsAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($salesEmailsAcion);
@@ -4356,12 +4454,12 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 		if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
       	{
 	        $post_data = Mage::app()->getRequest()->getParams();
-	        // $sessionId = $post_data['session'];
-	        // if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // check session if not, will return false
-	        // {
-	        //     echo $this->__("The Login has expired. Please try log in again.");
-	        //     return false;
-	        // }
+	        $sessionId = $post_data['session'];
+	        if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // check session if not, will return false
+	        {
+	            echo $this->__("The Login has expired. Please try log in again.");
+	            return false;
+	        }
 
 	        try
 	        {
@@ -4371,8 +4469,20 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 				//Tax Classes
 
 					//Tax Class for Shipping
+
+					if(isset($post_data['taxClassForShippingVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/classes/shipping_tax_class', $post_data['taxClassForShippingVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Tax Class for Shipping Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
 					$taxArr = Mage::getModel('tax/class_source_product')->toOptionArray();
+
 					$taxClassForShippingSelectedValue = Mage::getStoreConfig('tax/classes/shipping_tax_class');
+
 					foreach ($taxArr as $value)
 					{
 						if($value['value'] == $taxClassForShippingSelectedValue)
@@ -4389,41 +4499,13 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 							$taxNewArr['status']  =   0;
 							$saleTaxAcion['taxClassForShippingList'][] = $taxNewArr;
 						}
-					}
+					}	
 
-					if(isset($post_data['taxClassForShippingVal']))
-					{
-						Mage::getConfig()->saveConfig('tax/classes/shipping_tax_class', $post_data['taxClassForShippingVal'], 'default', 0);
-
-						$saleTaxAcion['successMessage'] = "Tax Class for Shipping Saved On ".$storeName." Store.";
-						Mage::getConfig()->reinit();
-						Mage::app()->reinitStores();
-					}
-					
 
 
 				//Calculation Settings
 
 					//Tax Calculation Method Based On
-					$taxCalculationMethodSelectedValue = Mage::getStoreConfig('tax/calculation/algorithm');
-					$taxCalculationMethod = new Mage_Tax_Model_System_Config_Source_Algorithm();
-					foreach ($taxCalculationMethod->toOptionArray() as $value)
-					{
-						if($value['value'] == $taxCalculationMethodSelectedValue)
-						{
-							$taxCalculationArr['value'] = $value['value'];
-							$taxCalculationArr['label'] = $value['label'];
-							$taxCalculationArr['status'] = 1;
-							$saleTaxAcion['status'] = 1;
-						}
-						else
-						{
-							$taxCalculationArr['value'] = $value['value'];
-							$taxCalculationArr['label'] = $value['label'];
-							$taxCalculationArr['status'] = 0;
-						}
-					}
-
 					if(isset($post_data['taxCalculationMethodVal']))
 					{
 						Mage::getConfig()->saveConfig('tax/calculation/algorithm', $post_data['taxCalculationMethodVal'], 'default', 0);
@@ -4433,8 +4515,886 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 						Mage::app()->reinitStores();
 					}
 
+					$taxCalculationMethodSelectedValue = Mage::getStoreConfig('tax/calculation/algorithm');
+					$taxCalculationMethod = new Mage_Tax_Model_System_Config_Source_Algorithm(); //echo "<pre>"; print_r($taxCalculationMethod->toOptionArray()); die;
+					foreach ($taxCalculationMethod->toOptionArray() as $value)
+					{
+						if($value['value'] == $taxCalculationMethodSelectedValue)
+						{
+							$taxCalculationBasedOnArr['value'] = $value['value'];
+							$taxCalculationBasedOnArr['label'] = $value['label'];
+							$taxCalculationBasedOnArr['status'] = 1;
+							$saleTaxAcion['taxCalculationMethodList'][] = $taxCalculationBasedOnArr;
+						}
+						else
+						{
+							$taxCalculationBasedOnArr['value'] = $value['value'];
+							$taxCalculationBasedOnArr['label'] = $value['label'];
+							$taxCalculationBasedOnArr['status'] = 0;
+							$saleTaxAcion['taxCalculationMethodList'][] = $taxCalculationBasedOnArr;
+						}
+					}
 
-				echo "<pre>"; print_r($saleTaxAcion); die;
+
+
+					//Tax Calculation Based On
+					if(isset($post_data['taxCalculationBasedVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/based_on', $post_data['taxCalculationBasedVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Tax Calculation Based On Saved On ".$storeName." Store.";
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$taxCalculationBasedSelectedValue = Mage::getStoreConfig('tax/calculation/based_on');
+					$taxCalculationBased = new Mage_Adminhtml_Model_System_Config_Source_Tax_Basedon();
+					//echo "<pre>"; print_r($taxCalculationBased->toOptionArray());
+					foreach ($taxCalculationBased->toOptionArray() as $value)
+					{
+						//echo $value['value']."*****".$taxCalculationBasedSelectedValue; die;
+						if($value['value'] == $taxCalculationBasedSelectedValue)
+						{
+							$taxCalculationBasedArr['value'] = $value['value'];
+							$taxCalculationBasedArr['label'] = $value['label'];
+							$taxCalculationBasedArr['status'] = 1;
+							$saleTaxAcion['taxCalculationBasedList'][] = $taxCalculationBasedArr;
+						}
+						else
+						{
+							$taxCalculationBasedArr['value'] = $value['value'];
+							$taxCalculationBasedArr['label'] = $value['label'];
+							$taxCalculationBasedArr['status'] = 0;
+							$saleTaxAcion['taxCalculationBasedList'][] = $taxCalculationBasedArr;
+						}
+					}
+
+
+
+					//Catalog Prices
+					if(isset($post_data['catalogPricesVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/price_includes_tax', $post_data['catalogPricesVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Catalog Prices Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['catalogPricesSelectedValue'] = Mage::getStoreConfig('tax/calculation/price_includes_tax');
+
+
+
+					//Shipping Prices
+					if(isset($post_data['shippingPricesVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/shipping_includes_tax', $post_data['shippingPricesVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Shipping Prices Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['shippingPricesSelectedValue'] = Mage::getStoreConfig('tax/calculation/shipping_includes_tax');
+
+
+
+					//Apply Customer Tax
+					if(isset($post_data['appluCustomerTaxVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/apply_after_discount', $post_data['appluCustomerTaxVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Apply Customer Tax Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['appluCustomerTaxSelectedValue'] = Mage::getStoreConfig('tax/calculation/apply_after_discount');
+
+
+
+					//Apply Discount On Prices
+					if(isset($post_data['applyDisOnPriceVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/discount_tax', $post_data['applyDisOnPriceVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Apply Discount On Prices Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['applyDisOnPriceSelectedValue'] = Mage::getStoreConfig('tax/calculation/discount_tax');
+
+
+
+					//Apply Tax On
+					if(isset($post_data['applyTaxOnVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/apply_tax_on', $post_data['applyTaxOnVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Apply Tax On Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['applyTaxOnSelectedValue'] = Mage::getStoreConfig('tax/calculation/apply_tax_on');
+
+
+
+					//Enable Cross Border Trade
+					if(isset($post_data['crossBorderTradeVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/calculation/cross_border_trade_enabled', $post_data['crossBorderTradeVal'], 'default', 0);
+
+						$saleTaxAcion['successMessage'] = "Enable Cross Border Trade Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['crossBorderTradeSelectedValue'] = Mage::getStoreConfig('tax/calculation/cross_border_trade_enabled');
+
+
+
+
+				//Default Tax Destination Calculation
+
+					//Default Country
+					if(isset($post_data['taxDefaultCountryVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/defaults/country', $post_data['taxDefaultCountryVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/defaults/country', $post_data['taxDefaultCountryVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Default Country For Tax Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$defauCountrySelectedValue = Mage::getStoreConfig('tax/defaults/country', $storeId);
+
+					$defaultCountriesList = Mage::getModel('directory/country')->getResourceCollection()->load()->toOptionArray(false);
+
+					foreach($defaultCountriesList as $value)
+					{
+						if($value['value'] == $defauCountrySelectedValue)
+						{
+							$defaultCurArr['value'] = $value['value'];
+							$defaultCurArr['label'] = $value['label'];
+							$defaultCurArr['status'] = 1;
+							$saleTaxAcion['TaxDefaultCountryList'][] = $defaultCurArr;
+						}
+						else
+						{
+							$defaultCurArr['value'] = $value['value'];
+							$defaultCurArr['label'] = $value['label'];
+							$defaultCurArr['status'] = 0;
+							$saleTaxAcion['TaxDefaultCountryList'][] = $defaultCurArr;
+						}
+					}
+
+
+
+					//Default Post Code
+					if(isset($post_data['taxDefaultPostCodeVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/defaults/postcode', $post_data['taxDefaultPostCodeVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/defaults/postcode', $post_data['taxDefaultPostCodeVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Default Country For Tax Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['taxDefaultPostCodeSelectedValue'] = Mage::getStoreConfig('tax/defaults/postcode', $storeId);
+
+
+
+
+				//Price Display Settings
+
+					//Display Product Prices In Catalog
+					if(isset($post_data['displayProductPricesVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/display/type', $post_data['displayProductPricesVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/display/type', $post_data['displayProductPricesVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Product Prices In Catalog Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayProductPricesSelectedValue = Mage::getStoreConfig('tax/display/type', $storeId);
+					
+					$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayProductPricesSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayProductPricesInCatalogList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayProductPricesInCatalogList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Display Shipping Prices
+					if(isset($post_data['displayShippingPricesVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/display/shipping', $post_data['displayShippingPricesVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/display/shipping', $post_data['displayShippingPricesVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Shipping Prices Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayShippingPricesSelectedValue = Mage::getStoreConfig('tax/display/shipping', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayShippingPricesSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayShippingPricesList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayShippingPricesList'][] = $displayProductArr;
+						}
+					}
+
+
+
+				//Shopping Cart Display Settings
+
+					//Display Prices
+					if(isset($post_data['displayPricesVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/price', $post_data['displayPricesVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/price', $post_data['displayPricesVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Prices Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPricesSelectedValue = Mage::getStoreConfig('tax/cart_display/price', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPricesSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Display Subtotal
+					if(isset($post_data['displaySubtotalVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/subtotal', $post_data['displaySubtotalVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/subtotal', $post_data['displaySubtotalVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Subtotal Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displaySubtotalSelectedValue = Mage::getStoreConfig('tax/cart_display/subtotal', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displaySubtotalSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displaySubtotalList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displaySubtotalList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Display Shipping Amount
+					if(isset($post_data['displayShippingAmountVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/shipping', $post_data['displayShippingAmountVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/shipping', $post_data['displayShippingAmountVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Shipping Amount Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayShippingAmountSelectedValue = Mage::getStoreConfig('tax/cart_display/shipping', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayShippingAmountSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayShippingAmountList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayShippingAmountList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Include Tax In Grand Total
+					if(isset($post_data['includeTaxInVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/grandtotal', $post_data['includeTaxInVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/grandtotal', $post_data['includeTaxInVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Include Tax In Grand Total Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['includeTaxInGrandTotalSelectedValue'] = Mage::getStoreConfig('tax/cart_display/grandtotal', $storeId);
+
+
+					//Display Full Tax Summary
+					if(isset($post_data['displayFullTaxVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/full_summary', $post_data['displayFullTaxVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/full_summary', $post_data['displayFullTaxVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Full Tax Summary Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['displayFullTaxSummarySelectedValue'] = Mage::getStoreConfig('tax/cart_display/full_summary', $storeId);
+
+
+					//Display Zero Tax Subtotal
+					if(isset($post_data['displayZeroTaxVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/zero_tax', $post_data['displayZeroTaxVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/cart_display/zero_tax', $post_data['displayZeroTaxVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Zero Tax Subtotal Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['displayZeroTaxSelectedValue'] = Mage::getStoreConfig('tax/cart_display/zero_tax', $storeId);
+					
+
+
+				//Orders, Invoices, Credit Memos Display Settings
+
+					//Display Prices
+					if(isset($post_data['displayPricesAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/price', $post_data['displayPricesAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/price', $post_data['displayPricesAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Prices Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPricesAllSelectedValue = Mage::getStoreConfig('tax/sales_display/price', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPricesAllSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesAllList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesAllList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Display Subtotal
+					if(isset($post_data['displaySubtotalAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/subtotal', $post_data['displaySubtotalAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/subtotal', $post_data['displaySubtotalAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Subtotal Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displaySubtotalAllSelectedValue = Mage::getStoreConfig('tax/sales_display/subtotal', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displaySubtotalAllSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displaySubtotalAllList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displaySubtotalAllList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Display Shipping Amount
+					if(isset($post_data['displayShippingAmountAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/shipping', $post_data['displayShippingAmountAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/shipping', $post_data['displayShippingAmountAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Shipping Amount Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayShippingAmountAllSelectedValue = Mage::getStoreConfig('tax/sales_display/shipping', $storeId);
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($displayProductPricesArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayShippingAmountAllSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayShippingAmountAllList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayShippingAmountAllList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Include Tax In Grand Total
+					if(isset($post_data['includeTaxInAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/grandtotal', $post_data['includeTaxInAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/grandtotal', $post_data['includeTaxInAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Include Tax In Grand Total Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['includeTaxInGrandTotalAllSelectedValue'] = Mage::getStoreConfig('tax/sales_display/grandtotal', $storeId);
+
+
+					//Display Full Tax Summary
+					if(isset($post_data['displayFullTaxAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/full_summary', $post_data['displayFullTaxAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/full_summary', $post_data['displayFullTaxAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Full Tax Summary Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['displayFullTaxSummaryAllSelectedValue'] = Mage::getStoreConfig('tax/sales_display/full_summary', $storeId);
+
+
+					//Display Zero Tax Subtotal
+					if(isset($post_data['displayZeroTaxAllVal']))
+					{
+						if($storeId == 0)
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/zero_tax', $post_data['displayZeroTaxAllVal'], 'default', $storeId);
+						}
+						else
+						{
+							Mage::getConfig()->saveConfig('tax/sales_display/zero_tax', $post_data['displayZeroTaxAllVal'], 'stores', $storeId);
+						}
+						
+						$saleTaxAcion['successMessage'] = "Display Zero Tax Subtotal Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$saleTaxAcion['displayZeroTaxAllSelectedValue'] = Mage::getStoreConfig('tax/sales_display/zero_tax', $storeId);
+
+
+
+
+				//Fixed Product Taxes
+
+					$fptModelList = new Mage_Weee_Model_Config_Source_Display();
+
+					//Enable FPT
+					if(isset($post_data['enableFptVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/enable', $post_data['enableFptVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Enable FPT Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['enableFptSelectedValue'] = Mage::getStoreConfig('tax/weee/enable');
+
+
+
+					//Display Prices In Product Lists
+					if(isset($post_data['displayPriceInProductVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/display_list', $post_data['displayPriceInProductVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Display Prices In Product Lists Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPriceInProductSelectedValue = Mage::getStoreConfig('tax/weee/display_list');
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($fptModelList->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPriceInProductSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesInProductList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesInProductList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Display Prices On Product View Page
+					if(isset($post_data['displayPriceInProductViewVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/display', $post_data['displayPriceInProductViewVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Display Prices On Product View Page Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPriceInProductViewSelectedValue = Mage::getStoreConfig('tax/weee/display');
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($fptModelList->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPriceInProductViewSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesInProductViewList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesInProductViewList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Display Prices In Sales Modules
+					if(isset($post_data['displayPriceInSalesViewVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/display_sales', $post_data['displayPriceInSalesViewVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Display Prices In Sales Modules Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPriceInProductSalesSelectedValue = Mage::getStoreConfig('tax/weee/display_sales');
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($fptModelList->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPriceInProductSalesSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesInProductSalesModuleList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesInProductSalesModuleList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Display Prices In Emails
+					if(isset($post_data['displayPriceInSalesEmailVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/display_email', $post_data['displayPriceInSalesEmailVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Display Prices In Emails Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$displayPriceInProductSalesEmailSelectedValue = Mage::getStoreConfig('tax/weee/display_email');
+					
+					//$displayProductPricesArr = new Mage_Tax_Model_System_Config_Source_Tax_Display_Type();
+					foreach ($fptModelList->toOptionArray() as $value)
+					{
+						if($value['value'] == $displayPriceInProductSalesEmailSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['displayPricesInProductSalesEmailList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['displayPricesInProductSalesEmailList'][] = $displayProductArr;
+						}
+					}
+
+
+					//Apply Discounts To FPT
+					if(isset($post_data['applyDisocuntVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/discount', $post_data['applyDisocuntVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Apply Discounts To FPT Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['applyDiscountSelectedValue'] = Mage::getStoreConfig('tax/weee/discount');
+
+
+
+					//FPT Tax Configuration
+					if(isset($post_data['taxConfigVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/apply_vat', $post_data['taxConfigVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "FPT Tax Configuration Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+
+					$taxConfigurationSelectedValue = Mage::getStoreConfig('tax/weee/apply_vat');
+					
+					$taxConfigArr = new Mage_Weee_Model_Config_Source_Fpt_Tax();
+					foreach ($taxConfigArr->toOptionArray() as $value)
+					{
+						if($value['value'] == $taxConfigurationSelectedValue)
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 1;
+							$saleTaxAcion['fptTaxConfigurationList'][] = $displayProductArr;
+						}
+						else
+						{
+							$displayProductArr['value'] = $value['value'];
+							$displayProductArr['label'] = $value['label'];
+							$displayProductArr['status'] = 0;
+							$saleTaxAcion['fptTaxConfigurationList'][] = $displayProductArr;
+						}
+					}
+
+
+
+					//Include FPT In Subtotal
+					if(isset($post_data['includeFptSubtotalVal']))
+					{
+						Mage::getConfig()->saveConfig('tax/weee/include_in_subtotal', $post_data['includeFptSubtotalVal'], 'default', 0);
+						
+						$saleTaxAcion['successMessage'] = "Include FPT In Subtotal Value Saved On ".$storeName." Store.";
+
+						Mage::getConfig()->reinit();
+						Mage::app()->reinitStores();
+					}
+					$saleTaxAcion['includeFptInSubtotalSelectedValue'] = Mage::getStoreConfig('tax/weee/include_in_subtotal');
+
+				// echo "<pre>"; print_r($saleTaxAcion); die;
 				$jsonData = Mage::helper('core')->jsonEncode($saleTaxAcion);
 		      	return Mage::app()->getResponse()->setBody($jsonData); 
 			}
@@ -4454,6 +5414,58 @@ class EmizenTech_MobileAdmin_ConfigurationController extends Mage_Core_Controlle
 	}
 
 	/***** End Sales TAX section ******/
+
+
+
+
+
+
+
+
+	//////////////////////////////////////////////// Working Progress on this part
+
+	/***** Start Shipping Methods section ******/
+
+	public function shippingMethodsAction()
+	{
+		if(Mage::helper('mobileadmin')->isEnable()) // check extension if enabled or not
+      	{
+	        $post_data = Mage::app()->getRequest()->getParams();
+	        // $sessionId = $post_data['session'];
+	        // if (!Mage::getSingleton('api/session')->isLoggedIn($sessionId)) // check session if not, will return false
+	        // {
+	        //     echo $this->__("The Login has expired. Please try log in again.");
+	        //     return false;
+	        // }
+
+	        try
+	        {
+	        	$storeId = $post_data['store'];
+				$storeName = Mage::getModel('core/store')->load($storeId)->getName();
+
+					
+				
+
+				//echo "<pre>"; print_r($shippMethodsAcion); die;
+				$jsonData = Mage::helper('core')->jsonEncode($shippMethodsAcion);
+		      	return Mage::app()->getResponse()->setBody($jsonData); 
+			}
+	        catch(Exception $e)
+	        {
+	        	$errorResult['error'] = $e->getMessage();
+
+	            $jsonData = Mage::helper('core')->jsonEncode($errorResult);
+		      	return Mage::app()->getResponse()->setBody($jsonData);
+	        }	
+		}
+        else
+		{
+			$isEnable    = Mage::helper('core')->jsonEncode(array('enable' => false));
+			return Mage::app()->getResponse()->setBody($isEnable); // set body with json format
+		}
+	}
+
+	/***** End Shipping Methods section ******/
 
 }
 ?>

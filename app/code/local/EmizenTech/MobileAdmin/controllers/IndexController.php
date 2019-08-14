@@ -8,16 +8,22 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
     {
       //Mage::log('test', null, "cart_android.log");
       $modules = Mage::getConfig()->getNode('modules')->children();
-      $modulesArray = (array)$modules;
+      $modulesArray = (array)$modules['EmizenTech_MobileAdmin'];
       $check_arr = (array)$modulesArray['EmizenTech_MobileAdmin'];
 
-      if(!isset($modulesArray['EmizenTech_MobileAdmin']) && $check_arr['active'])
+      // Mage::log($modulesArray['active'], null, "cart_android.log");
+      // Mage::log("HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello", null, "cart_android.log");
+      // Mage::log($check_arr['active'], null, "cart_android.log");
+      
+      if(!isset($modulesArray['EmizenTech_MobileAdmin']['active']) && $check_arr['active'])
       {
-        $error = array('error' => 'Please install and activate EmizenTech_MobileAdminn extension on your store');
+
+        $error = array('error' => 'Please Enable EmizenTech_MobileAdminn. Go to System > Emizen Mobile Admin');
+        //Mage::log($error, null, "cart_android.log");
         $jsonData = Mage::helper('core')->jsonEncode($error);
         return Mage::app()->getResponse()->setBody($jsonData);
       }
-      
+      //Mage::log('fffff', null, "cart_android.log");
       
 	   if(Mage::getStoreConfig('emizen_mob/emizen_general/enabled')) // check if extension is enabled on your magento store.
      {
@@ -101,7 +107,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
       }
       else
       { 
-          $result['error'] = $this->__('Please activate the Mobile Emizentech Extension on the Magento Store.');
+          $result['error'] = $this->__('Please Enable EmizenTech_MobileAdminn. Go to System > Emizen Mobile Admin');
       }
       $jsonData = Mage::helper('core')->jsonEncode($result);
       return Mage::app()->getResponse()->setBody($jsonData);
@@ -117,12 +123,12 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
       $url_info    = parse_url($url); // parse url using this function
 
       $modules = Mage::getConfig()->getNode('modules')->children();
-      $modulesArray = (array)$modules;
+      $modulesArray = (array)$modules['EmizenTech_MobileAdmin'];
       $check_arr = (array)$modulesArray['EmizenTech_MobileAdmin'];
 
-      if(!isset($modulesArray['EmizenTech_MobileAdmin']) && $check_arr['active'])
+      if(!isset($modulesArray['EmizenTech_MobileAdmin']['active']) && $check_arr['active'])
       {
-        $error = array('error' => 'Please install and activate EmizenTech_MobileAdminn extension in your store');
+        $error = array('error' => 'Please Enable EmizenTech_MobileAdminn. Go to System > Emizen Mobile Admin');
         $jsonData = Mage::helper('core')->jsonEncode($error);
         return Mage::app()->getResponse()->setBody($jsonData);
       }
@@ -171,7 +177,7 @@ class EmizenTech_MobileAdmin_IndexController extends Mage_Core_Controller_Front_
       }
       else
       {
-        $result['error'] = $this->__('Please activate the Mobile Emizentech Extension on the Magento Store.');
+        $result['error'] = $this->__('Please Enable EmizenTech_MobileAdminn. Go to System > Emizen Mobile Admin.');
       }
       $jsonData = Mage::helper('core')->jsonEncode($result); // convert data array to json
       return Mage::app()->getResponse()->setBody($jsonData);
