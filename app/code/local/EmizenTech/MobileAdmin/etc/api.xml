@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<config>
+    <api>
+        <resources>
+            <mobileadmin_api translate="title" module="mobileadmin">
+                <title>Myapi</title>
+                <acl>mobileadmin/api</acl>
+                <model>mobileadmin/api</model>
+                <methods>                    
+						<create translate="title" module="mobileadmin">
+							<title>Create</title>
+							<acl>mobileadmin/create</acl>
+						</create>
+                </methods>
+            </mobileadmin_api>
+        </resources>
+        <acl>
+            <resources>
+                <mobileadmin translate="title" module="mobileadmin">
+                    <title>MobileAdmin</title>
+                    <sort_order>2000</sort_order>                    
+					<create translate="title" module="mobileadmin">
+                        <title>Create</title>
+                    </create>
+                </mobileadmin>
+            </resources>
+        </acl>
+    </api>
+</config>

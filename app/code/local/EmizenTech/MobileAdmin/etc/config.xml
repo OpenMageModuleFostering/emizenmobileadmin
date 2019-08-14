@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<config>
+  <modules>
+    <EmizenTech_MobileAdmin>
+      <version>0.1.0</version>
+    </EmizenTech_MobileAdmin>
+  </modules>
+  <frontend>
+    <routers>
+      <mobileadmin>
+        <use>standard</use>
+          <args>
+            <module>EmizenTech_MobileAdmin</module>
+            <frontName>mobileadmin</frontName>
+          </args>
+      </mobileadmin>
+    </routers>
+		<layout>
+		  <updates>
+			<mobileadmin>
+			  <file>mobileadmin.xml</file>
+			</mobileadmin>
+		  </updates>
+		</layout>
+  </frontend>
+  <global>
+    <helpers>
+      <mobileadmin>
+        <class>EmizenTech_MobileAdmin_Helper</class>
+      </mobileadmin>
+    </helpers>
+	<blocks>
+	  <mobileadmin>
+		<class>EmizenTech_MobileAdmin_Block</class>
+	  </mobileadmin>
+	</blocks>
+	<models>
+	  <mobileadmin>
+		<class>EmizenTech_MobileAdmin_Model</class>
+		<resourceModel>mobileadmin_mysql4</resourceModel>
+	  </mobileadmin>
+	  <mobileadmin_mysql4>
+		<class>EmizenTech_MobileAdmin_Model_Mysql4</class>
+		<entities>		  
+			  <emizenmob>
+				<table>emizenmob</table>
+			  </emizenmob>
+		</entities>
+	  </mobileadmin_mysql4>
+	</models>
+	<resources>
+	  <mobileadmin_setup>
+		<setup>
+		  <module>EmizenTech_MobileAdmin</module>
+		</setup>
+		<connection>
+		  <use>core_setup</use>
+		</connection>
+	  </mobileadmin_setup>
+	  <mobileadmin_write>
+		<connection>
+		  <use>core_write</use>
+		</connection>
+	  </mobileadmin_write>
+	  <mobileadmin_read>
+		<connection>
+		  <use>core_read</use>
+		</connection>
+	  </mobileadmin_read>
+	</resources>
+    <events>
+	  <sales_order_save_after> <!-- identifier of the event we want to catch -->
+        <observers>
+          <sales_order_save_after_handler> <!-- identifier of the event handler -->
+            <type>model</type> <!-- class method call type; valid are model, object and singleton -->
+            <class>mobileadmin/observer</class> <!-- observers class alias -->
+            <method>salesOrderSaveAfter</method>  <!-- observer's method to be called -->
+            <args></args> <!-- additional arguments passed to observer -->
+          </sales_order_save_after_handler>
+        </observers>
+      </sales_order_save_after>
+	  <customer_register_success> <!-- identifier of the event we want to catch -->
+        <observers>
+          <customer_register_success_handler> <!-- identifier of the event handler -->
+            <type>model</type> <!-- class method call type; valid are model, object and singleton -->
+            <class>mobileadmin/observer</class> <!-- observers class alias -->
+            <method>customerRegisterNotification</method>  <!-- observer's method to be called -->
+            <args></args> <!-- additional arguments passed to observer -->
+          </customer_register_success_handler>
+        </observers>
+      </customer_register_success>
+	  <customer_register_checkout> <!-- identifier of the event we want to catch -->
+        <observers>
+          <customer_register_checkout_handler> <!-- identifier of the event handler -->
+            <type>model</type> <!-- class method call type; valid are model, object and singleton -->
+            <class>mobileadmin/observer</class> <!-- observers class alias -->
+            <method>customerRegisterNotificationCheckout</method>  <!-- observer's method to be called -->
+            <args></args> <!-- additional arguments passed to observer -->
+          </customer_register_checkout_handler>
+        </observers>
+      </customer_register_checkout>
+    </events>
+  </global>
+</config> 
