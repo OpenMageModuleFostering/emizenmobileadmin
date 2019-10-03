@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/emizenmobileadmin",
+    "name": "OpenMageModuleFostering\/emizenmobileadmin",
     "type": "magento-module",
     "license": "OSL-v3.0",
     "homepage": "",
     "description": "You can Now Track you all the Magento Backend Activity Using our Emizentech Magento Mobile Apps . IT has very great feature API to display All the Sales Activity with Graph .  You can now easily see all the Magento Orders Listing , Product Listing, Customer Listing .",
     "authors": [
-    {
-        "name": "Emizen Tech Private Limited",
-        "email": "info@emizentech.com"
-    }
-],
+        {
+            "name": "Emizen Tech Private Limited",
+            "email": "info@emizentech.com"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
